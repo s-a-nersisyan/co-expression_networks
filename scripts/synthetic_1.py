@@ -17,28 +17,32 @@ second_sample = second_target**2 + 1 * np.random.normal(0, 1, 1000)
 
 
 print("Analytic computations")
-deltas = np.linspace(0, 2, 1000)
+deltas = np.linspace(-2, 2, 1000)
 probas = []
 for d in tqdm.tqdm(deltas):
     probas.append(spearmanr_diff_proba(
         first_target, [first_sample],
         second_target, [second_sample],
-        d
+        d,
+        alternative="less",
+        method="analytic"
     ))
 probas = np.array(probas)
 plt.plot(deltas, probas, label="analytic")
 
 print("Bootstrap computations")
-deltas = np.linspace(0, 2, 100)
+deltas = np.linspace(-2, 2, 100)
 probas = []
 for d in tqdm.tqdm(deltas):
     probas.append(spearmanr_diff_proba(
         first_target, [first_sample],
         second_target, [second_sample],
-        d
+        d,
+        alternative="less",
+        method="bootstrap"
     ))
 probas = np.array(probas)
-plt.plot(deltas, probas, label="analytic")
+plt.plot(deltas, probas, label="bootstrap")
 
 plt.legend()
 plt.savefig("./tests/{}.png".format(sys.argv[0].split(".")[0]))
