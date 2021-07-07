@@ -370,4 +370,51 @@ def correlation_diff_proba(
 
     return None
 
+def pearsonr_diff_test(
+    first_target, first_sample,
+    second_target, second_sample,
+    alternative="two-sided"
+):
+    first_sample = np.array(first_sample)
+    second_sample = np.array(second_sample)
+
+    first_rs = []
+    second_rs = []
+
+    for i in range(len(first_sample)):
+        rs = pearsonr_stats(
+            first_target, first_sample[i]
+        )
+        first_rs.append(rs)
+
+    for i in range(len(second_sample)):
+        rs = pearsonr_stats(
+            second_target, second_sample[i]
+        )
+        second_rs.append(rs)
+
+    first_rs = np.array(first_rs)
+    second_rs = np.array(second_rs)
+
+    first_ss = pearsonr_std(first_rs, len(first_target))
+    second_ss = pearsonr_std(second_rs, len(second_target))
+
+    delta = np.arctanh(first_rs) - np.arctanh(second_rs)
+    proba = None
+
+    if (alternative == "less"):
+        proba = norm.cdf(delta,
+            scale=np.sqrt(first_ss**2 + second_ss**2))
+    elif (alternative == "greater"):
+        proba = 1 - norm.cdf(delta,
+            scale=np.sqrt(first_ss**2 + second_ss**2))
+    elif (alternative == "two-sided"):
+        proba = 2 * norm.cdf(-np.abs(delta),
+            scale=np.sqrt(first_ss**2 + second_ss**2))
+
+    return delta, proba
+
+
+
+
 
