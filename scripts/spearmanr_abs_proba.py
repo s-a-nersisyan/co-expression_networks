@@ -5,7 +5,7 @@ import tqdm
 
 import sys
 
-from core.spearmanr import *
+from core.correlation import *
 
 normal = pd.read_csv(sys.argv[1], sep=",", index_col=0)
 tumored = pd.read_csv(sys.argv[2], sep=",", index_col=0)
@@ -38,10 +38,11 @@ normal_corrs = np.array([
 ])
 
 print("Analytic computations")
-pvalue = spearmanr_diff_proba(
+pvalue = correlation_diff_proba(
     normal_target, normal,
     tumored_target, tumored,
-    np.abs(tumored_corrs - normal_corrs)
+    np.abs(tumored_corrs - normal_corrs),
+    correlation="spearman"
 )
 
 np.save("../data/AR_analytic_pvalue.npy", pvalue)
@@ -58,10 +59,11 @@ print(tumored_corrs[indexes])
 print(pvalue[indexes])
 
 print("Bootstrap computations")
-pvalue = spearmanr_diff_proba(
+pvalue = correlation_diff_proba(
     normal_target, normal.iloc[indexes],
     tumored_target, tumored.iloc[indexes],
     np.abs(tumored_corrs[indexes] - normal_corrs[indexes]),
+    correlation="spearman",
     method="bootstrap"
 )
 

@@ -1,7 +1,9 @@
 import numpy as np
 
 from scipy.stats import t
+from scipy.stats import norm
 from scipy.stats import spearmanr
+from scipy.stats import pearsonr
 
 from .utils import *
 
@@ -19,7 +21,7 @@ def spearmanr_stats(target, sample, stat="rs"):
     rs = spearmanr(target, sample)[0]
     if (stat== "rs"):
         return rs
-    elif (stat == "std"):
+    elif (stat == "ss"):
         return spearmanr_std(rs, len(target))
     else:
         return rs, spearmanr_std(rs, len(target))
@@ -30,11 +32,29 @@ def spearmanr_proba(quantiles, rs, ss, size):
         size - 2
     )
 
+def pearsonr_std(rs, size):
+    return np.sqrt(1 / (size - 3))
 
-def spermanr_diff_analytic_proba(
+def pearsonr_stats(target, sample, stat="rs"):
+    rs = pearsonr(target, sample)[0]
+    if (stat== "rs"):
+        return rs
+    elif (stat == "ss"):
+        return pearsonr_std(rs, len(target))
+    else:
+        return rs, pearsonr_std(rs, len(target))
+
+def pearsonr_proba(quantiles, rs, ss, size):
+    return norm.cdf(
+        (np.arctanh(quantiles) - np.arctanh(rs)) / ss
+    )
+
+
+def correlation_diff_analytic_proba(
     first_rs, first_size,
     second_rs, second_size,
     delta,
+    correlation="spearman",
     alternative="two-sided"
 ):
     # first_rs = np.array(first_rs)
@@ -51,40 +71,53 @@ def spermanr_diff_analytic_proba(
         np.abs(second_rs) >= 1 - EPS2)
 
     if (np.sum(indexes_1) > 0):
-        proba[indexes_1] = _spermanr_diff_analytic_proba_1(
+        proba[indexes_1] = _correlation_diff_analytic_proba_1(
             first_rs[indexes_1], first_size,
             second_rs[indexes_1], second_size,
             delta[indexes_1],
+            correlation=correlation,
             alternative=alternative
         )
 
     if (np.sum(indexes_2) > 0):
-        proba[indexes_2] = _spermanr_diff_analytic_proba_2(
+        proba[indexes_2] = _correlation_diff_analytic_proba_2(
             first_rs[indexes_2], first_size,
             second_rs[indexes_2], second_size,
             delta[indexes_2],
+            correlation=correlation,
             alternative=alternative
         )
 
     if (np.sum(indexes_3) > 0):
-        proba[indexes_3] = _spermanr_diff_analytic_proba_3(
+        proba[indexes_3] = _correlation_diff_analytic_proba_3(
             first_rs[indexes_3], first_size,
             second_rs[indexes_3], second_size,
             delta[indexes_3],
+            correlation=correlation,
             alternative=alternative
         )
 
     return proba
 
-def _spermanr_diff_analytic_proba_1(
+def _correlation_diff_analytic_proba_1(
     first_rs, first_size,
     second_rs, second_size,
     delta,
+    correlation="spearman",
     alternative="two-sided"
 ):
     # check that all correlations are not equal to 1
     assert(np.sum(np.logical_or(np.abs(first_rs) >= 1 - EPS2,
         np.abs(second_rs) >= 1 - EPS2)) == 0)
+
+    if (correlation == "spearman"):
+        correlation_std = spearmanr_std
+        correlation_stats = spearmanr_stats
+        correlation_proba = spearmanr_proba
+    elif (correlation == "pearson"):
+        correlation_std = pearsonr_std
+        correlation_stats = pearsonr_stats
+        correlation_proba = pearsonr_proba
 
     delta = delta.reshape((-1, 1))
 
@@ -96,17 +129,17 @@ def _spermanr_diff_analytic_proba_1(
     quantiles_pd = bound(quantiles_pd, -1 + EPS1, 1 - EPS1)
     quantiles_md = bound(quantiles_md, -1 + EPS1, 1 - EPS1)
 
-    first_ss = spearmanr_std(first_rs, first_size)
-    second_ss = spearmanr_std(second_rs, second_size)
+    first_ss = correlation_std(first_rs, first_size)
+    second_ss = correlation_std(second_rs, second_size)
 
     first_rs = first_rs.reshape((-1, 1))
     first_ss = first_ss.reshape((-1, 1))
     second_rs = second_rs.reshape((-1, 1))
     second_ss = second_ss.reshape((-1, 1))
 
-    fd_pd = spearmanr_proba(quantiles_pd, first_rs, first_ss, first_size)
-    fd_md = spearmanr_proba(quantiles_md, first_rs, first_ss, first_size)
-    sd = spearmanr_proba(quantiles, second_rs, second_ss, second_size)
+    fd_pd = correlation_proba(quantiles_pd, first_rs, first_ss, first_size)
+    fd_md = correlation_proba(quantiles_md, first_rs, first_ss, first_size)
+    sd = correlation_proba(quantiles, second_rs, second_ss, second_size)
 
     if (alternative == "less"):
         return np.sum(
@@ -119,21 +152,31 @@ def _spermanr_diff_analytic_proba_1(
         axis=1
     )
 
-def _spermanr_diff_analytic_proba_2(
+def _correlation_diff_analytic_proba_2(
     first_rs, first_size,
     second_rs, second_size,
     delta,
+    correlation="spearman",
     alternative="two-sided"
 ):
     # check that all correlations are equal to 1
     assert(np.sum(np.logical_xor(np.abs(first_rs) >= 1 - EPS2,
         np.abs(second_rs) >= 1 - EPS2)) == len(delta))
 
+    if (correlation == "spearman"):
+        correlation_std = spearmanr_std
+        correlation_stats = spearmanr_stats
+        correlation_proba = spearmanr_proba
+    elif (correlation == "pearson"):
+        correlation_std = pearsonr_std
+        correlation_stats = pearsonr_stats
+        correlation_proba = pearsonr_proba
+
     if (alternative == "less"):
         proba = np.zeros(len(delta))
 
-        first_ss = spearmanr_std(first_rs, first_size)
-        second_ss = spearmanr_std(second_rs, second_size)
+        first_ss = correlation_std(first_rs, first_size)
+        second_ss = correlation_std(second_rs, second_size)
 
         f_indexes = (np.abs(first_rs) >= 1 - EPS2)
         s_indexes = (np.abs(second_rs) >= 1 - EPS2)
@@ -144,12 +187,12 @@ def _spermanr_diff_analytic_proba_2(
         # s_delta_indexes = ((np.abs(second_rs[s_indexes] +\
         #     delta[s_indexes]) >= 1 - EPS1) & s_indexes)
 
-        proba[f_indexes] = 1 - spearmanr_proba(
+        proba[f_indexes] = 1 - correlation_proba(
             bound(first_rs[f_indexes] - delta[f_indexes], -1 + EPS1, 1 - EPS1),
             second_rs[f_indexes], second_ss[f_indexes], second_size
         )
 
-        proba[s_indexes] = spearmanr_proba(
+        proba[s_indexes] = correlation_proba(
             bound(second_rs[s_indexes] + delta[s_indexes], -1 + EPS1, 1 - EPS1),
             first_rs[s_indexes], first_ss[s_indexes], first_size
         )
@@ -160,7 +203,7 @@ def _spermanr_diff_analytic_proba_2(
     first_rs[indexes], second_rs[indexes] =\
         second_rs[indexes], first_rs[indexes]
 
-    first_ss = spearmanr_std(first_rs, first_size)
+    first_ss = correaltion_std(first_rs, first_size)
 
     proba = np.zeros(len(delta))
 
@@ -180,22 +223,23 @@ def _spermanr_diff_analytic_proba_2(
     # )
     m_indexes = (second_rs <= -1 + EPS2)
 
-    proba[p_indexes] = 1 - spearmanr_proba(
+    proba[p_indexes] = 1 - correlation_proba(
         bound(1 - delta[p_indexes], -1 + EPS1, 1 - EPS1),
         first_rs[p_indexes], first_ss[p_indexes], first_size
     )
 
-    proba[m_indexes] = spearmanr_proba(
+    proba[m_indexes] = correlation_proba(
         bound(-1 + delta[m_indexes], -1 + EPS1, 1 - EPS1),
         first_rs[m_indexes], first_ss[m_indexes], first_size
     )
 
     return proba
 
-def _spermanr_diff_analytic_proba_3(
+def _correlation_diff_analytic_proba_3(
     first_rs, first_size,
     second_rs, second_size,
     delta,
+    correlation="spearman",
     alternative="two-sided"
 ):
     # check that all correlations are equal to 1
@@ -210,7 +254,7 @@ def _spermanr_diff_analytic_proba_3(
     proba[np.abs(first_rs - second_rs) <= delta] = 1
     return proba
 
-def spermanr_diff_bootstrap_proba(
+def diff_bootstrap_proba(
     first_rs_samples, second_rs_samples,
     delta,
     alternative="two-sided"
@@ -227,13 +271,23 @@ def spermanr_diff_bootstrap_proba(
         axis=1
     ) / len(first_rs_samples[0])
 
-def spearmanr_diff_proba(
+def correlation_diff_proba(
     first_target, first_sample,
     second_target, second_sample,
     delta,
+    correlation="spearman",
     alternative="two-sided",
     method="analytic"
 ):
+    if (correlation == "spearman"):
+        correlation_std = spearmanr_std
+        correlation_stats = spearmanr_stats
+        correlation_proba = spearmanr_proba
+    elif (correlation == "pearson"):
+        correlation_std = pearsonr_std
+        correlation_stats = pearsonr_stats
+        correlation_proba = pearsonr_proba
+
     if (isinstance(delta, float)):
         delta = np.array([delta])
     else:
@@ -249,19 +303,19 @@ def spearmanr_diff_proba(
         second_rs_samples = []
         for i in range(len(first_sample)):
             first_rs_samples.append([
-                r for r, p in bootstrap_sample(
+                r for r in bootstrap_sample(
                     first_target,
                     first_sample[i],
-                    statistic=spearmanr
+                    statistic=correlation_stats
                 )
             ])
 
         for i in range(len(second_sample)):
             second_rs_samples.append([
-                r for r, p in bootstrap_sample(
+                r for r in bootstrap_sample(
                     second_target,
                     second_sample[i],
-                    statistic=spearmanr
+                    statistic=correlation_stats
                 )
             ])
 
@@ -274,7 +328,7 @@ def spearmanr_diff_proba(
             delta = -delta
             alternative = "less"
 
-        return spermanr_diff_bootstrap_proba(
+        return diff_bootstrap_proba(
             first_rs_samples,
             second_rs_samples,
             delta,
@@ -283,19 +337,19 @@ def spearmanr_diff_proba(
 
     elif (method == "analytic"):
         first_rs = []
+        second_rs = []
+
         for i in range(len(first_sample)):
-            rs = spearmanr_stats(
+            rs = correlation_stats(
                 first_target, first_sample[i]
             )
             first_rs.append(rs)
 
-        second_rs = []
         for i in range(len(second_sample)):
-            rs = spearmanr_stats(
+            rs = correlation_stats(
                 second_target, second_sample[i]
             )
             second_rs.append(rs)
-
 
         first_rs = np.array(first_rs)
         second_rs = np.array(second_rs)
@@ -306,88 +360,14 @@ def spearmanr_diff_proba(
             delta = -delta
             alternative = "less"
 
-        return spermanr_diff_analytic_proba(
+        return correlation_diff_analytic_proba(
             first_rs, len(first_target),
             second_rs, len(second_target),
             delta,
+            correlation=correlation,
             alternative=alternative
         )
 
     return None
 
-def spearmanr_test(
-    first_target, first_sample,
-    second_target, second_sample,
-    alternative="two-sided",
-    method="analytic"
-):
-    first_sample = np.array(first_sample)
-    second_sample = np.array(second_sample)
 
-    first_rs = []
-    for i in range(len(first_sample)):
-        rs = spearmanr_stats(
-            first_target, first_sample[i]
-        )
-        first_rs.append(rs)
-
-    second_rs = []
-    for i in range(len(second_sample)):
-        rs = spearmanr_stats(
-            second_target, second_sample[i]
-        )
-        second_rs.append(rs)
-
-    first_rs = np.array(first_rs)
-    second_rs = np.array(second_rs)
-
-    test = first_rs - second_rs
-
-    if (method == "bootstrap"):
-        first_rs_samples = []
-        second_rs_samples = []
-        for i in range(len(first_sample)):
-            first_rs_samples.append(np.arctanh(
-                np.random.standard_t(
-                    len(first_target) - 2,
-                    size=BOOTSTRAP_REPEATS
-                ) * spearmanr_std(0, len(first_target))
-            ))
-
-        for i in range(len(second_sample)):
-            second_rs_samples.append(np.arctanh(
-                np.random.standard_t(
-                    len(second_target) - 2,
-                    size=BOOTSTRAP_REPEATS
-                ) * spearmanr_std(0, len(second_target))
-            ))
-
-        first_rs_samples = np.array(first_rs_samples)
-        second_rs_samples = np.array(second_rs_samples)
-
-        if (alternative == "greater"):
-            first_rs_samples, second_rs_samples =\
-                second_rs_samples, first_rs_samples
-            test = -test
-            alternative = "less"
-
-        return test, spermanr_diff_bootstrap_proba(
-            first_rs_samples,
-            second_rs_samples,
-            test,
-            alternative=alternative
-        )
-
-    elif (method == "analytic"):
-        if (alternative == "greater"):
-            test = -test
-            alternative = "less"
-
-        return test, _spermanr_diff_analytic_proba_1(
-            np.zeros(len(first_rs)), len(first_sample),
-            np.zeros(len(second_rs)), len(second_sample),
-            test,
-            alternative=alternative
-        )
-
-    return None
