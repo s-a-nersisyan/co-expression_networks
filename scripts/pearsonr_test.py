@@ -6,52 +6,52 @@ import tqdm
 import sys
 
 from core.correlation import *
+from config import *
 
-normal = pd.read_csv(sys.argv[1], sep=",", index_col=0)
-tumored = pd.read_csv(sys.argv[2], sep=",", index_col=0)
 
-# if (len(sys.argv) > 3):
-#     graph_df = pd.rad_csv(sys.argv[3], sep=",")
+first_df = pd.read_csv(FIRST_SAMPLE_PATH, sep=",", index_col=0)
+second_df = pd.read_csv(SECOND_SAMPLE_PATH, sep=",", index_col=0)
 
-TOP_SIZE = 10**4
-GENE = "AR"
-CORR_TRESHOLD = 0.1
-PV_TRESHOLD = 0.05
+network_df = None
+if (NETWORK_PATH):
+    network_df = pd.read_csv(NETWORK_PATH, sep=",", index_col=0)
 
-top_expressed_genes = np.array(tumored.median(axis=1).sort_values(
-    ascending=False
-).index[:TOP_SIZE])
+result = []
+def _run_process(target, sample):
+    first_target = first_df.loc[target]
+    first_sample = first_df.loc[sample]
 
-tumored_target = tumored.loc[GENE]
-tumored = tumored.loc[top_expressed_genes].reindex(top_expressed_genes)
-normal_target = normal.loc[GENE]
-normal = normal.loc[top_expressed_genes].reindex(top_expressed_genes)
+    second_target = second_df.loc[target]
+    second_sample = second_df.loc[sample]
 
-tumored_corrs = np.array([
-    spearmanr_stats(tumored_target, sample)\
-    for i, sample in tqdm.tqdm(tumored.iterrows())
-])
+    first_rs, second_rs, pvalue = pearsonr_diff_test(
+        first_target, first_sample,
+        second_target, second_sample,
+        values="fsp"
+    )
 
-normal_corrs = np.array([
-    spearmanr_stats(normal_target, sample)\
-    for i, sample in tqdm.tqdm(normal.iterrows())
-])
+    for elem, f, s, p in zip(sample, first_rs, second_rs, pvalue):
+        result.append([target, elem, f, s, p])
 
-print("Analytic computations")
-test, pvalue = pearsonr_diff_test(
-    normal_target, normal,
-    tumored_target, tumored,
+def run_process(indexes):
+    df = network_df.iloc[indexes]
+    for target in df["Target"].unique():
+        _run_process(target, df[df["Target"] == target]["Sample"].unique())
+
+
+network_df = network_df.sort_values(by=["Target", "Sample"]).iloc[:20]
+batch_size = len(network_df) / PROCESS_NUMBER
+for process_ind in range(PROCESS_NUMBER - 1):
+    indexes = np.arange(
+        batch_size * process_ind,
+        batch_size * (process_ind + 1)
+    )
+    run_process(indexes)
+
+indexes = np.arange(
+    batch_size * (PROCESS_NUMBER - 1),
+    len(network_df)
 )
+run_process(indexes)
 
-np.save("../data/AR_pearsonr_test.npy", pvalue)
-
-# indexes = np.logical_and(
-#     np.abs(normal_corrs - tumored_corrs) > CORR_TRESHOLD,
-#     pvalue < PV_TRESHOLD
-# )
-
-indexes = np.argsort(pvalue)[:10]
-print(top_expressed_genes[indexes])
-print(normal_corrs[indexes])
-print(tumored_corrs[indexes])
-print(pvalue[indexes])
+print(result)

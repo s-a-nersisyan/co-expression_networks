@@ -4,6 +4,7 @@ import pandas as pd
 import tqdm
 
 import sys
+sys.path.append("../")
 
 from core.correlation import *
 
@@ -41,18 +42,14 @@ print("Analytic computations")
 pvalue = correlation_diff_proba(
     normal_target, normal,
     tumored_target, tumored,
-    np.abs(tumored_corrs - normal_corrs),
-    correlation="spearman"
+    [0] * len(tumored_corrs),
+    correlation="spearman",
+    method="analytic",
+    alternative="less"
 )
 
-np.save("../data/AR_analytic_pvalue.npy", pvalue)
-
-# indexes = np.logical_and(
-#     np.abs(normal_corrs - tumored_corrs) > CORR_TRESHOLD,
-#     pvalue < PV_TRESHOLD
-# )
-
-indexes = np.argsort(pvalue)[:10]
+# np.save("../data/AR_analytic_pvalue.npy", pvalue)
+indexes = np.argsort(-pvalue)[:10]
 print(top_expressed_genes[indexes])
 print(normal_corrs[indexes])
 print(tumored_corrs[indexes])
@@ -62,19 +59,13 @@ print("Bootstrap computations")
 pvalue = correlation_diff_proba(
     normal_target, normal.iloc[indexes],
     tumored_target, tumored.iloc[indexes],
-    np.abs(tumored_corrs[indexes] - normal_corrs[indexes]),
+    [0] * len(indexes),
     correlation="spearman",
-    method="bootstrap"
+    method="bootstrap",
+    alternative="less"
 )
 
-np.save("../data/AR_bootstrap_pvalue.npy", pvalue)
-
-# indexes = np.logical_and(
-#     np.abs(normal_corrs - tumored_corrs) > CORR_TRESHOLD,
-#     pvalue < PV_TRESHOLD
-# )
-
-# indexes = indexes[np.argsort(pvalue)]
+# np.save("../data/AR_bootstrap_pvalue.npy", pvalue)
 print(top_expressed_genes[indexes])
 print(normal_corrs[indexes])
 print(tumored_corrs[indexes])

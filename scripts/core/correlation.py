@@ -373,7 +373,8 @@ def correlation_diff_proba(
 def pearsonr_diff_test(
     first_target, first_sample,
     second_target, second_sample,
-    alternative="two-sided"
+    alternative="two-sided",
+    values="tp"
 ):
     first_sample = np.array(first_sample)
     second_sample = np.array(second_sample)
@@ -412,7 +413,17 @@ def pearsonr_diff_test(
         proba = 2 * norm.cdf(-np.abs(delta),
             scale=np.sqrt(first_ss**2 + second_ss**2))
 
-    return delta, proba
+    result = []
+    if ("f" in values):
+        result.append(first_rs)
+    if ("s" in values):
+        result.append(second_rs)
+    if ("t" in values):
+        result.append(delta)
+    if ("p" in values):
+        result.append(proba)
+
+    return result
 
 
 
