@@ -424,8 +424,3 @@ def pearsonr_diff_test(
         result.append(proba)
 
     return result
-
-
-
-
-
