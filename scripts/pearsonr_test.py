@@ -5,54 +5,49 @@ import tqdm
 
 import sys
 
-from core.correlation import *
+from core.CorrTest import *
 from config import *
-from pcorr import pearson_correlation
 
+from CorrUtils import pearsonr
+from CorrUtils import UNDEFINED_CORR_VALUE
 
-first_df = pd.read_csv(FIRST_target_PATH, sep=",", index_col=0)
-second_df = pd.read_csv(SECOND_target_PATH, sep=",", index_col=0)
+first_df = pd.read_csv(FIRST_DATA_PATH, sep=",", index_col=0)
+second_df = pd.read_csv(SECOND_DATA_PATH, sep=",", index_col=0)
 
 network_df = None
 if (NETWORK_PATH):
     network_df = pd.read_csv(NETWORK_PATH, sep=",", index_col=0)
 
-result = []
-def _run_process(source, target):
-    first_source = first_df.loc[source]
-    first_target = first_df.loc[target]
+def get_numeric_indexes(indexes, str_indexes):
+    index_numbers = np.arange(len(indexes))
 
-    second_source = second_df.loc[source]
-    second_target = second_df.loc[target]
+    return np.array([
+        index_numbers[
+            np.where(indexes == s_ind)
+        ][-1] for s_ind in str_indexes
+    ])
 
-    first_rs, second_rs, pvalue = pearsonr_diff_test(
-        first_source, first_target,
-        second_source, second_target,
-        values="fsp"
+def get_pearson_correlations(df, source_indexes, target_indexes):
+    df_indexes = np.array(df.index)
+    df_data = df.to_numpy().astype("float32")
+
+    source_num_indexes = get_numeric_indexes(df_indexes, source_indexes).astype("int32")
+    target_num_indexes = get_numeric_indexes(df_indexes, target_indexes).astype("int32")
+    corrs = pearsonr(
+        df_data,
+        source_num_indexes,
+        target_num_indexes,
+        1
     )
 
-    for elem, f, s, p in zip(target, first_rs, second_rs, pvalue):
-        result.append([source, elem, f, s, p])
+    corrs[corrs == UNDEFINED_CORR_VALUE] = None
+    return corrs
 
-def run_process(indexes):
-    df = network_df.iloc[indexes]
-    for source in df["source"].unique():
-        _run_process(source, df[df["source"] == source]["target"].unique())
+network_df = network_df.iloc[:2]
+print(network_df)
 
-
-network_df = network_df.sort_values(by=["source", "target"]).iloc[:20]
-batch_size = len(network_df) / PROCESS_NUMBER
-for process_ind in range(PROCESS_NUMBER - 1):
-    indexes = np.arange(
-        batch_size * process_ind,
-        batch_size * (process_ind + 1)
-    )
-    run_process(indexes)
-
-indexes = np.arange(
-    batch_size * (PROCESS_NUMBER - 1),
-    len(network_df)
-)
-run_process(indexes)
-
-print(result)
+print(get_pearson_correlations(
+    first_df,
+    network_df["Source"],
+    network_df["Target"]
+))
