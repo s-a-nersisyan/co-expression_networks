@@ -130,3 +130,9 @@ dmypy.json
 
 # Test data dir
 data/
+
+# Build dir
+build/
+
+# Object module files
+scripts/*.so

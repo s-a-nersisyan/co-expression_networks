@@ -1,6 +1,6 @@
 import numpy as np
 
-BOOTSTRAP_REPEATS = 10**3
+BOOTSTRAP_REPEATS = 10**4
 
 
 def bound(array, left, right):
