@@ -17,14 +17,14 @@ EPS3 = 1e-5
 def spearmanr_std(rs, size):
     return np.sqrt((1 + rs**2 / 2) / (size - 3))
 
-def spearmanr_stats(target, sample, stat="rs"):
-    rs = spearmanr(target, sample)[0]
+def spearmanr_stats(source, target, stat="rs"):
+    rs = spearmanr(source, target)[0]
     if (stat== "rs"):
         return rs
     elif (stat == "ss"):
-        return spearmanr_std(rs, len(target))
+        return spearmanr_std(rs, len(source))
     else:
-        return rs, spearmanr_std(rs, len(target))
+        return rs, spearmanr_std(rs, len(source))
 
 def spearmanr_proba(quantiles, rs, ss, size):
     return t.cdf(
@@ -35,14 +35,14 @@ def spearmanr_proba(quantiles, rs, ss, size):
 def pearsonr_std(rs, size):
     return np.sqrt(1 / (size - 3))
 
-def pearsonr_stats(target, sample, stat="rs"):
-    rs = pearsonr(target, sample)[0]
+def pearsonr_stats(source, target, stat="rs"):
+    rs = pearsonr(source, target)[0]
     if (stat== "rs"):
         return rs
     elif (stat == "ss"):
-        return pearsonr_std(rs, len(target))
+        return pearsonr_std(rs, len(source))
     else:
-        return rs, pearsonr_std(rs, len(target))
+        return rs, pearsonr_std(rs, len(source))
 
 def pearsonr_proba(quantiles, rs, ss, size):
     return norm.cdf(
@@ -255,25 +255,25 @@ def _correlation_diff_analytic_proba_3(
     return proba
 
 def diff_bootstrap_proba(
-    first_rs_samples, second_rs_samples,
+    first_rs_targets, second_rs_targets,
     delta,
     alternative="two-sided"
 ):
     delta = delta.reshape((-1, 1))
     if (alternative == "less"):
         return np.sum(
-            first_rs_samples <= second_rs_samples + delta,
+            first_rs_targets <= second_rs_targets + delta,
             axis=1
-        ) / len(first_rs_samples[0])
+        ) / len(first_rs_targets[0])
 
     return np.sum(
-        np.abs(first_rs_samples - second_rs_samples) <= delta,
+        np.abs(first_rs_targets - second_rs_targets) <= delta,
         axis=1
-    ) / len(first_rs_samples[0])
+    ) / len(first_rs_targets[0])
 
 def correlation_diff_proba(
-    first_target, first_sample,
-    second_target, second_sample,
+    first_source, first_target,
+    second_source, second_target,
     delta,
     correlation="spearman",
     alternative="two-sided",
@@ -293,44 +293,44 @@ def correlation_diff_proba(
     else:
         delta = np.array(delta)
 
-    first_sample = np.array(first_sample)
-    second_sample = np.array(second_sample)
+    first_target = np.array(first_target)
+    second_target = np.array(second_target)
 
-    proba = np.zeros(len(first_sample))
+    proba = np.zeros(len(first_target))
 
     if (method == "bootstrap"):
-        first_rs_samples = []
-        second_rs_samples = []
-        for i in range(len(first_sample)):
-            first_rs_samples.append([
-                r for r in bootstrap_sample(
-                    first_target,
-                    first_sample[i],
+        first_rs_targets = []
+        second_rs_targets = []
+        for i in range(len(first_target)):
+            first_rs_targets.append([
+                r for r in bootstrap_target(
+                    first_source,
+                    first_target[i],
                     statistic=correlation_stats
                 )
             ])
 
-        for i in range(len(second_sample)):
-            second_rs_samples.append([
-                r for r in bootstrap_sample(
-                    second_target,
-                    second_sample[i],
+        for i in range(len(second_target)):
+            second_rs_targets.append([
+                r for r in bootstrap_target(
+                    second_source,
+                    second_target[i],
                     statistic=correlation_stats
                 )
             ])
 
-        first_rs_samples = np.array(first_rs_samples)
-        second_rs_samples = np.array(second_rs_samples)
+        first_rs_targets = np.array(first_rs_targets)
+        second_rs_targets = np.array(second_rs_targets)
 
         if (alternative == "greater"):
-            first_rs_samples, second_rs_samples =\
-                second_rs_samples, first_rs_samples
+            first_rs_targets, second_rs_targets =\
+                second_rs_targets, first_rs_targets
             delta = -delta
             alternative = "less"
 
         return diff_bootstrap_proba(
-            first_rs_samples,
-            second_rs_samples,
+            first_rs_targets,
+            second_rs_targets,
             delta,
             alternative=alternative
         )
@@ -339,15 +339,15 @@ def correlation_diff_proba(
         first_rs = []
         second_rs = []
 
-        for i in range(len(first_sample)):
+        for i in range(len(first_target)):
             rs = correlation_stats(
-                first_target, first_sample[i]
+                first_source, first_target[i]
             )
             first_rs.append(rs)
 
-        for i in range(len(second_sample)):
+        for i in range(len(second_target)):
             rs = correlation_stats(
-                second_target, second_sample[i]
+                second_source, second_target[i]
             )
             second_rs.append(rs)
 
@@ -361,8 +361,8 @@ def correlation_diff_proba(
             alternative = "less"
 
         return correlation_diff_analytic_proba(
-            first_rs, len(first_target),
-            second_rs, len(second_target),
+            first_rs, len(first_source),
+            second_rs, len(second_source),
             delta,
             correlation=correlation,
             alternative=alternative

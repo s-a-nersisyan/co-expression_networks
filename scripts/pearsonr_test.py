@@ -7,39 +7,40 @@ import sys
 
 from core.correlation import *
 from config import *
+from pcorr import pearson_correlation
 
 
-first_df = pd.read_csv(FIRST_SAMPLE_PATH, sep=",", index_col=0)
-second_df = pd.read_csv(SECOND_SAMPLE_PATH, sep=",", index_col=0)
+first_df = pd.read_csv(FIRST_target_PATH, sep=",", index_col=0)
+second_df = pd.read_csv(SECOND_target_PATH, sep=",", index_col=0)
 
 network_df = None
 if (NETWORK_PATH):
     network_df = pd.read_csv(NETWORK_PATH, sep=",", index_col=0)
 
 result = []
-def _run_process(target, sample):
+def _run_process(source, target):
+    first_source = first_df.loc[source]
     first_target = first_df.loc[target]
-    first_sample = first_df.loc[sample]
 
+    second_source = second_df.loc[source]
     second_target = second_df.loc[target]
-    second_sample = second_df.loc[sample]
 
     first_rs, second_rs, pvalue = pearsonr_diff_test(
-        first_target, first_sample,
-        second_target, second_sample,
+        first_source, first_target,
+        second_source, second_target,
         values="fsp"
     )
 
-    for elem, f, s, p in zip(sample, first_rs, second_rs, pvalue):
-        result.append([target, elem, f, s, p])
+    for elem, f, s, p in zip(target, first_rs, second_rs, pvalue):
+        result.append([source, elem, f, s, p])
 
 def run_process(indexes):
     df = network_df.iloc[indexes]
-    for target in df["Target"].unique():
-        _run_process(target, df[df["Target"] == target]["Sample"].unique())
+    for source in df["source"].unique():
+        _run_process(source, df[df["source"] == source]["target"].unique())
 
 
-network_df = network_df.sort_values(by=["Target", "Sample"]).iloc[:20]
+network_df = network_df.sort_values(by=["source", "target"]).iloc[:20]
 batch_size = len(network_df) / PROCESS_NUMBER
 for process_ind in range(PROCESS_NUMBER - 1):
     indexes = np.arange(
