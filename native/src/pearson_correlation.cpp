@@ -130,5 +130,5 @@ NumPyFloatArray pearson_correlation(
 }
 
 PYBIND11_MODULE(correlation_src, m) {
-    m.def("pearson_correlation", &pearson_correlation);        
+    m.def("pcorr", &pearson_correlation);        
 }
