@@ -50,7 +50,7 @@ def pearsonr_test(
     Returns
     -------
     numerical value or numpy.array respectively to the input
-        Contains statistic and pvalue depending on "value".
+        Contains statistic and pvalue.
     """
 
     first_rs = np.array(first_rs)
@@ -62,20 +62,20 @@ def pearsonr_test(
     first_ss = pearsonr_std(first_rs, first_size)
     second_ss = pearsonr_std(second_rs, second_size)
 
-    test = np.arctanh(first_rs) - np.arctanh(second_rs)
+    stat = np.arctanh(first_rs) - np.arctanh(second_rs)
     pvalue = None
 
     if (alternative == "less"):
-        pvalue = scipy.stats.norm.cdf(test,
+        pvalue = scipy.stats.norm.cdf(stat,
             scale=np.sqrt(first_ss**2 + second_ss**2))
     elif (alternative == "greater"):
-        pvalue = 1 - scipy.stats.norm.cdf(test,
+        pvalue = 1 - scipy.stats.norm.cdf(stat,
             scale=np.sqrt(first_ss**2 + second_ss**2))
     elif (alternative == "two-sided"):
-        pvalue = 2 * scipy.stats.norm.cdf(-np.abs(test),
+        pvalue = 2 * scipy.stats.norm.cdf(-np.abs(stat),
             scale=np.sqrt(first_ss**2 + second_ss**2))
 
-    test[first_rs == second_rs] = 0
+    stat[first_rs == second_rs] = 0
     pvalue[first_rs == second_rs] = 0
 
-    return test, pvalue
+    return stat, pvalue

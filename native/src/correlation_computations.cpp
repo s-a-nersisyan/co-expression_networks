@@ -92,7 +92,7 @@ NumPyFloatArray pearsonr(
         throw std::runtime_error("Index shapes must match");
     }
 
-    if (process_num < index_size) {
+    if (process_num > index_size) {
         process_num = index_size;
     }
     
