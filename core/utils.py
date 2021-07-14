@@ -10,7 +10,10 @@ def bound(array, left, right):
     array[array > right] = right
     return array
 
-def bootstrap_sample(*args, statistic=None):
+def bootstrap_sample(
+    *args, statistic=None,
+    bootstrap_repeats=BOOTSTRAP_REPEATS
+):
     for i in range(BOOTSTRAP_REPEATS):
         indexes = np.random.choice(
             np.arange(len(args[0])),

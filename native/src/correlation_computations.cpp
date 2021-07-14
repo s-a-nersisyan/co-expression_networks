@@ -91,6 +91,10 @@ NumPyFloatArray pearsonr(
     if (source_ind_buf.size != target_ind_buf.size) {
         throw std::runtime_error("Index shapes must match");
     }
+
+    if (process_num < index_size) {
+        process_num = index_size;
+    }
     
     NumPyFloatArray corrs = NumPyFloatArray(source_ind_buf.size);
     float *corrs_ptr = (float *) corrs.request().ptr;
@@ -106,27 +110,22 @@ NumPyFloatArray pearsonr(
     } else {
         std::vector<std::thread> threads;
         int batch_size = index_size / process_num;
-        for (int i = 0; i < process_num - 1; ++i) {
+        for (int i = 0; i < process_num; ++i) {
+            int left_border = i * batch_size;
+            int right_border = (i + 1) * batch_size;
+            if (i == process_num) {
+                right_border = index_size;
+            }
             // std::cout << "Process start:" << i << "\n";
             std::thread thr(pearsonr_thread,
                 std::ref(data),
                 std::ref(source_indexes),
                 std::ref(target_indexes),
                 corrs_ptr, 
-                i * batch_size, (i + 1) * batch_size
+                left_border, right_border
             );
             threads.push_back(move(thr));
         }
-
-        // std::cout << "Process start: " << process_num - 1 << "\n";
-        std::thread thr(pearsonr_thread,
-            std::ref(data),
-            std::ref(source_indexes),
-            std::ref(target_indexes),
-            corrs_ptr,
-            (process_num - 1) * batch_size, index_size
-        );
-        threads.push_back(move(thr));
 
         for (size_t i = 0; i < threads.size(); ++i) {
             threads[i].join();

@@ -13,8 +13,7 @@ from .correlation_utils import \
 def pearsonr_test(
     first_rs, first_size,
     second_rs, second_size,
-    alternative="two-sided",
-    value="tp"
+    alternative="two-sided"
 ):
     """Check the hypothesis that pearson correlations
     are equal
@@ -79,10 +78,4 @@ def pearsonr_test(
     test[first_rs == second_rs] = 0
     pvalue[first_rs == second_rs] = 0
 
-    result = []
-    if ("t" in value):
-        result.append(test)
-    if ("p" in value):
-        result.append(pvalue)
-
-    return result
+    return test, pvalue
