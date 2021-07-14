@@ -139,7 +139,3 @@ scripts/
 
 # Build dir
 build/
-
-# git files
-.gitignore
-.gitmodules
