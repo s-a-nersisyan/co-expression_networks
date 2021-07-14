@@ -131,8 +131,15 @@ dmypy.json
 # Test data dir
 data/
 
+# Archieve dir
+archive/
+
+# Additional scripts
+scripts/
+
 # Build dir
 build/
 
-# Object module files
-scripts/*.so
+# git files
+.gitignore
+.gitmodules

@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 
 import tqdm
 
+# import "core" module
 import sys
 sys.path.append("../")
-
-from core.correlation import *
+import core
 
 
 first_target = np.random.normal(1.2, 1, 1000)
@@ -21,7 +21,7 @@ print("Analytic computations")
 deltas = np.linspace(-2, 2, 1000)
 probas = []
 for d in tqdm.tqdm(deltas):
-    probas.append(correlation_diff_proba(
+    probas.append(core.correlation_diff_proba(
         first_target, [first_sample],
         second_target, [second_sample],
         d,
@@ -36,7 +36,7 @@ print("Bootstrap computations")
 deltas = np.linspace(-2, 2, 100)
 probas = []
 for d in tqdm.tqdm(deltas):
-    probas.append(correlation_diff_proba(
+    probas.append(core.correlation_diff_proba(
         first_target, [first_sample],
         second_target, [second_sample],
         d,
