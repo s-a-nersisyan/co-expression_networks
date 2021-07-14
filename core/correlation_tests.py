@@ -76,6 +76,6 @@ def pearsonr_test(
             scale=np.sqrt(first_ss**2 + second_ss**2))
 
     stat[first_rs == second_rs] = 0
-    pvalue[first_rs == second_rs] = 0
+    pvalue[first_rs == second_rs] = 1
 
     return stat, pvalue

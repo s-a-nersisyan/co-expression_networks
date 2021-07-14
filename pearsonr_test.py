@@ -11,7 +11,7 @@ import core
 from config import *
 
 
-TOP_SIZE = 10**3
+TOP_SIZE = 10**8
 
 
 first_df = pd.read_csv(FIRST_DATA_PATH, sep=",", index_col=0)

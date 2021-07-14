@@ -3,4 +3,4 @@ SECOND_DATA_PATH = "./data/tumored.csv"
 NETWORK_PATH = "./data/network.csv"
 OUTPUT_DIR_PATH = "./data/"
 
-PROCESS_NUMBER = 2
+PROCESS_NUMBER = 4
