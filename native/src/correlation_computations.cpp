@@ -22,7 +22,6 @@ int pearsonr_thread(
     float *corrs_ptr,
     int start_ind, int end_ind
 ) {
-    // std::cout << start_ind << " " << end_ind << "\n";
     py::buffer_info source_ind_buf = source_indexes.request();
     py::buffer_info target_ind_buf = target_indexes.request();
     py::buffer_info data_buf = data.request();
@@ -34,7 +33,12 @@ int pearsonr_thread(
     int sample_size = data_buf.shape[1];
     for (int i = start_ind; i < end_ind; ++i) {
         int source_index = source_ind_ptr[i]; 
-        int target_index = target_ind_ptr[i]; 
+        int target_index = target_ind_ptr[i];
+
+	if ((source_index >= data_buf.shape[0]) ||
+	    (target_index >= data_buf.shape[0])) {
+		throw std::runtime_error("Request index problem");
+	}
         
         float correlation = 0;
         float source_mean = 0, target_mean = 0;
@@ -73,7 +77,6 @@ int pearsonr_thread(
         corrs_ptr[i] = correlation;
     }
 
-    // std::cout << start_ind << " " << end_ind << "\n"; 
     return 0;
 }
 
@@ -95,11 +98,15 @@ NumPyFloatArray pearsonr(
     if (process_num > index_size) {
         process_num = index_size;
     }
+
+    if (process_num <= 0) {	
+        throw std::runtime_error("Process number error");
+    }
     
     NumPyFloatArray corrs = NumPyFloatArray(source_ind_buf.size);
     float *corrs_ptr = (float *) corrs.request().ptr;
     
-    if (process_num <= 1) {
+    if (process_num == 1) {
         pearsonr_thread(
             data,
             source_indexes,
@@ -107,17 +114,18 @@ NumPyFloatArray pearsonr(
             corrs_ptr, 
             0, index_size
         );
+
     } else {
         std::vector<std::thread> threads;
         int batch_size = index_size / process_num;
         for (int i = 0; i < process_num; ++i) {
             int left_border = i * batch_size;
             int right_border = (i + 1) * batch_size;
-            if (i == process_num) {
+            if (i == process_num - 1) {
                 right_border = index_size;
             }
-            // std::cout << "Process start:" << i << "\n";
-            std::thread thr(pearsonr_thread,
+            
+	    std::thread thr(pearsonr_thread,
                 std::ref(data),
                 std::ref(source_indexes),
                 std::ref(target_indexes),
@@ -129,7 +137,6 @@ NumPyFloatArray pearsonr(
 
         for (size_t i = 0; i < threads.size(); ++i) {
             threads[i].join();
-            // std::cout << "Process end: " << i << "\n";
         }
     }
 
@@ -137,6 +144,6 @@ NumPyFloatArray pearsonr(
 }
 
 PYBIND11_MODULE(correlation_computations, m) {
-    m.def("pearsonr", &pearsonr);
+    m.def("_pearsonr", &pearsonr);
     m.attr("UNDEFINED_CORR_VALUE") = py::float_(UNDEFINED_CORR_VALUE);
 }

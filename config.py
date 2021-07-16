@@ -1,6 +1,11 @@
-DATA_PATH = "./data/data.csv"
-DESCRIPTION_PATH = "./data/description.csv"
-INTERACTION_PATH = "./data/interaction.csv"
-OUTPUT_DIR_PATH = "./data/"
+DATA_PATH = "./data/TCGA-PRAD/data.csv"
+DESCRIPTION_PATH = "./data/TCGA-PRAD/description.csv"
+INTERACTION_PATH = None 
+# "./data/interaction.csv"
+OUTPUT_DIR_PATH = "./data/TCGA-PRAD/"
 
-PROCESS_NUMBER = 4
+REFERENCE_GROUP = "Normal"
+EXPERIMENTAL_GROUP = "Tumor"
+
+CORRELATION = "spearman"
+PROCESS_NUMBER = 8
