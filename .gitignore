@@ -139,3 +139,6 @@ scripts/
 
 # Build dir
 build/
+
+# .swp files: they are being created during running vim
+.swp

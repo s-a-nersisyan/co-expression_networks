@@ -7,6 +7,7 @@
 #include <thread>
 #include <string>
 #include <utility>
+#include <queue>
 
 namespace py = pybind11;
 
@@ -20,30 +21,18 @@ const float UNDEFINED_CORR_DIFF_TEST_VALUE = -2;
 // Correlation block
 
 int pearsonr_thread(
-    const NumPyFloatArray &data,
-    const NumPyIntArray &source_indexes,
-    const NumPyIntArray &target_indexes,
+    float *data_ptr,
+    int *source_ind_ptr,
+    int *target_ind_ptr,
     float *corrs_ptr,
+	int sample_size,
     int start_ind, int end_ind
 ) {
-    py::buffer_info source_ind_buf = source_indexes.request();
-    py::buffer_info target_ind_buf = target_indexes.request();
-    py::buffer_info data_buf = data.request();
-    
-    float *data_ptr = (float *) data_buf.ptr;
-    int *source_ind_ptr = (int *) source_ind_buf.ptr;
-    int *target_ind_ptr = (int *) target_ind_buf.ptr;
-    
-    int sample_size = data_buf.shape[1];
-    for (int i = start_ind; i < end_ind; ++i) {
+   
+	for (int i = start_ind; i < end_ind; ++i) {
         int source_index = source_ind_ptr[i]; 
         int target_index = target_ind_ptr[i];
 
-	if ((source_index >= data_buf.shape[0]) ||
-	    (target_index >= data_buf.shape[0])) {
-		throw std::runtime_error("Request index problem");
-	}
-        
         float correlation = 0;
         float source_mean = 0, target_mean = 0;
         float source_var  = 0, target_var  = 0;
@@ -94,7 +83,8 @@ NumPyFloatArray pearsonr(
     py::buffer_info target_ind_buf = target_indexes.request();
     py::buffer_info data_buf = data.request();
     
-    int index_size = source_ind_buf.shape[0];
+	int sample_size = data_buf.shape[1]; 
+	int index_size = source_ind_buf.shape[0];
     if (source_ind_buf.size != target_ind_buf.size) {
         throw std::runtime_error("Index shapes must match");
     }
@@ -112,15 +102,16 @@ NumPyFloatArray pearsonr(
     
     if (process_num == 1) {
         pearsonr_thread(
-            data,
-            source_indexes,
-            target_indexes,
-            corrs_ptr, 
+            (float *) data_buf.ptr,
+            (int *) source_ind_buf.ptr,
+            (int *) target_ind_buf.ptr,
+            corrs_ptr,
+			sample_size,
             0, index_size
         );
 
     } else {
-        std::vector<std::thread> threads;
+        std::queue<std::thread> threads;
         int batch_size = index_size / process_num;
         for (int i = 0; i < process_num; ++i) {
             int left_border = i * batch_size;
@@ -130,19 +121,21 @@ NumPyFloatArray pearsonr(
             }
             
 	    	std::thread thr(pearsonr_thread,
-                std::ref(data),
-                std::ref(source_indexes),
-                std::ref(target_indexes),
-                corrs_ptr, 
+                (float *) data_buf.ptr,
+                (int *) source_ind_buf.ptr,
+                (int *) target_ind_buf.ptr,
+                corrs_ptr,
+				sample_size,
                 left_border, right_border
             );
             
-			threads.push_back(move(thr));
+			threads.push(move(thr));
         }
 
-        for (size_t i = 0; i < threads.size(); ++i) {
-            threads[i].join();
-        }
+		while (!threads.empty()) {
+			threads.front().join();
+			threads.pop();
+		}
     }
 
     return corrs;
@@ -155,23 +148,14 @@ float norm_cdf(float x) {
 }
 
 int corr_diff_test_thread(
-    const NumPyFloatArray &first_rs,
-    const NumPyIntArray &first_size,
-    const NumPyFloatArray &second_rs,
-    const NumPyIntArray &second_size,
-	float *stat_ptr,
-	float *pvalue_ptr,
+    float *first_rs_ptr, int *first_size_ptr,
+    float *second_rs_ptr, int *second_size_ptr,
+	float *stat_ptr, float *pvalue_ptr,
 	int start_ind, int end_ind,
     std::string &correlation,
     std::string &alternative
 ) {
-	float *first_rs_ptr = (float *) first_rs.request().ptr;
-    float *first_size_ptr = (float *) first_size.request().ptr;
-    float *second_rs_ptr = (float *) second_rs.request().ptr;
-    float *second_size_ptr = (float *) second_size.request().ptr;
-	
 	for (int ind = start_ind; ind < end_ind; ++ind) {
-		// Handle 1 corr cases
 		if (std::abs(first_rs_ptr[ind] + second_rs_ptr[ind]) == 2) {
 			stat_ptr[ind] = UNDEFINED_CORR_DIFF_TEST_VALUE;
 			pvalue_ptr[ind] = UNDEFINED_CORR_DIFF_TEST_VALUE;
@@ -179,8 +163,8 @@ int corr_diff_test_thread(
 		}
 
 		float stat = (std::atanh(first_rs_ptr[ind]) -
-				std::atanh(second_rs_ptr[ind]));
-		
+				std::atanh(second_rs_ptr[ind]));	
+
 		// This block is a copy of 
 		// core.correlation_utils.pearson_std
 		float first_ss = 1 / std::sqrt(first_size_ptr[ind] - 3);
@@ -189,8 +173,9 @@ int corr_diff_test_thread(
 			first_ss *= std::sqrt(1.5);
 			second_ss *= std::sqrt(1.5);
 		}
+
 		float std = std::sqrt(first_ss * first_ss +
-				second_ss * second_ss);
+				second_ss * second_ss);	
 		
 		float pvalue = UNDEFINED_CORR_DIFF_TEST_VALUE;
 		if (alternative == "less") {
@@ -220,7 +205,7 @@ std::pair<NumPyFloatArray, NumPyFloatArray> corr_diff_test(
     py::buffer_info first_rs_buf = first_rs.request();
     py::buffer_info second_rs_buf = second_rs.request();
     
-    int rs_number = first_rs_buf.shape[0];
+	int rs_number = first_rs_buf.shape[0];
     if (first_rs_buf.size != second_rs_buf.size) {
         throw std::runtime_error("Correlation shapes must match");
     }
@@ -236,17 +221,13 @@ std::pair<NumPyFloatArray, NumPyFloatArray> corr_diff_test(
     NumPyFloatArray stat = NumPyFloatArray(first_rs_buf.size);
     NumPyFloatArray pvalue = NumPyFloatArray(first_rs_buf.size);
     
-    // float *first_rs_ptr = (float *) first_rs_buf.ptr;
-    // float *first_size_ptr = (float *) first_size.request().ptr;
-    // float *second_rs_ptr = (float *) second_rs_buf.ptr;
-    // float *second_size_ptr = (float *) second_size.request().ptr; 
     float *stat_ptr = (float *) stat.request().ptr;
     float *pvalue_ptr = (float *) pvalue.request().ptr;
     
     if (process_num == 1) {
         corr_diff_test_thread(
-            first_rs, first_size,
-            second_rs, second_size,
+            (float *) first_rs_buf.ptr, (int *) first_size.request().ptr,
+            (float *) second_rs_buf.ptr, (int *) second_size.request().ptr,
 	    	stat_ptr, pvalue_ptr,
 	    	0, rs_number,
             correlation,
@@ -254,7 +235,7 @@ std::pair<NumPyFloatArray, NumPyFloatArray> corr_diff_test(
         );
 
     } else {
-        std::vector<std::thread> threads;
+        std::queue<std::thread> threads;
         int batch_size = rs_number / process_num;
         for (int i = 0; i < process_num; ++i) {
             int left_border = i * batch_size;
@@ -262,22 +243,23 @@ std::pair<NumPyFloatArray, NumPyFloatArray> corr_diff_test(
             if (i == process_num - 1) {
                 right_border = rs_number;
             }
-	    
+			
 			std::thread thr(corr_diff_test_thread,
-				std::ref(first_rs), std::ref(first_size),
-				std::ref(second_rs), std::ref(second_size),
+				(float *) first_rs_buf.ptr, (int *) first_size.request().ptr,
+				(float *) second_rs_buf.ptr, (int *) second_size.request().ptr,
 				stat_ptr, pvalue_ptr,
 				left_border, right_border,
 				std::ref(correlation),
 				std::ref(alternative)
 			);
 				
-			threads.push_back(move(thr));
+			threads.push(move(thr));
         }
 
-        for (size_t i = 0; i < threads.size(); ++i) {
-            threads[i].join();
-        }
+		while (!threads.empty()) {
+			threads.front().join();
+			threads.pop();
+		}
     }
 
     return std::pair<NumPyFloatArray,
