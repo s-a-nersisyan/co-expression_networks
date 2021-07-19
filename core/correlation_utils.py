@@ -62,7 +62,7 @@ def spearmanr_mean(source, target):
     """
     return scipy.stats.spearmanr(source, target)[0]
 
-def spearmanr_proba(quantiles, rs, size, ss=None):
+def spearmanr_cdf(quantiles, rs, size, ss=None):
     """Computes quaniles of spearman correlation distribution
 
     Parameters
@@ -116,7 +116,7 @@ def pearsonr_std(rs, size):
         normal distribution, where "x" is a random variable
         distributed as the correlation with an actual value "rs".
     """
-    return np.sqrt(1 / (size - 3))
+    return 1 / np.sqrt(size - 3)
 
 def pearsonr_mean(source, target):
     """Computes actual value of pearson correlation
@@ -134,7 +134,7 @@ def pearsonr_mean(source, target):
     """
     return scipy.stats.pearsonr(source, target)[0]
 
-def pearsonr_proba(quantiles, rs, size, ss=None):
+def pearsonr_cdf(quantiles, rs, size, ss=None):
     """Computes quaniles of pearson correlation distribution
 
     Parameters
@@ -166,7 +166,7 @@ def pearsonr_proba(quantiles, rs, size, ss=None):
 
 
 # Correlation difference block
-def correlation_diff_proba(
+def correlation_diff_cdf(
     first_source, first_target,
     second_source, second_target,
     delta,
@@ -207,11 +207,11 @@ def correlation_diff_proba(
     if (correlation == "spearman"):
         correlation_std = spearmanr_std
         correlation_mean = spearmanr_mean
-        correlation_proba = spearmanr_proba
+        correlation_cdf = spearmanr_cdf
     elif (correlation == "pearson"):
         correlation_std = pearsonr_std
         correlation_mean = pearsonr_mean
-        correlation_proba = pearsonr_proba
+        correlation_cdf = pearsonr_cdf
 
     if (isinstance(delta, float)):
         delta = np.array([delta])
@@ -253,7 +253,7 @@ def correlation_diff_proba(
             delta = -delta
             alternative = "less"
 
-        return diff_bootstrap_proba(
+        return diff_bootstrap_cdf(
             first_rs_targets,
             second_rs_targets,
             delta,
@@ -285,7 +285,7 @@ def correlation_diff_proba(
             delta = -delta
             alternative = "less"
 
-        return correlation_diff_analytic_proba(
+        return correlation_diff_analytic_cdf(
             first_rs, len(first_source),
             second_rs, len(second_source),
             delta,
@@ -295,7 +295,7 @@ def correlation_diff_proba(
 
     return None
 
-def correlation_diff_analytic_proba(
+def correlation_diff_analytic_cdf(
     first_rs, first_size,
     second_rs, second_size,
     delta,
@@ -341,7 +341,7 @@ def correlation_diff_analytic_proba(
         np.abs(second_rs) >= 1 - EPS2)
 
     if (np.sum(indexes_1) > 0):
-        proba[indexes_1] = _correlation_diff_analytic_proba_1(
+        proba[indexes_1] = _correlation_diff_analytic_cdf_1(
             first_rs[indexes_1], first_size,
             second_rs[indexes_1], second_size,
             delta[indexes_1],
@@ -350,7 +350,7 @@ def correlation_diff_analytic_proba(
         )
 
     if (np.sum(indexes_2) > 0):
-        proba[indexes_2] = _correlation_diff_analytic_proba_2(
+        proba[indexes_2] = _correlation_diff_analytic_cdf_2(
             first_rs[indexes_2], first_size,
             second_rs[indexes_2], second_size,
             delta[indexes_2],
@@ -359,7 +359,7 @@ def correlation_diff_analytic_proba(
         )
 
     if (np.sum(indexes_3) > 0):
-        proba[indexes_3] = _correlation_diff_analytic_proba_3(
+        proba[indexes_3] = _correlation_diff_analytic_cdf_3(
             first_rs[indexes_3], first_size,
             second_rs[indexes_3], second_size,
             delta[indexes_3],
@@ -369,7 +369,7 @@ def correlation_diff_analytic_proba(
 
     return proba
 
-def _correlation_diff_analytic_proba_1(
+def _correlation_diff_analytic_cdf_1(
     first_rs, first_size,
     second_rs, second_size,
     delta,
@@ -377,7 +377,7 @@ def _correlation_diff_analytic_proba_1(
     alternative="two-sided"
 ):
     """
-    Similar to "correlation_diff_analytic_proba". It
+    Similar to "correlation_diff_analytic_cdf". It
     is used in the case of both "first_rs" and "second_rs"
     are separated from 1 and -1.
     """
@@ -388,11 +388,11 @@ def _correlation_diff_analytic_proba_1(
     if (correlation == "spearman"):
         correlation_std = spearmanr_std
         correlation_mean = spearmanr_mean
-        correlation_proba = spearmanr_proba
+        correlation_cdf = spearmanr_cdf
     elif (correlation == "pearson"):
         correlation_std = pearsonr_std
         correlation_mean = pearsonr_mean
-        correlation_proba = pearsonr_proba
+        correlation_cdf = pearsonr_cdf
 
     delta = delta.reshape((-1, 1))
 
@@ -412,9 +412,9 @@ def _correlation_diff_analytic_proba_1(
     second_rs = second_rs.reshape((-1, 1))
     second_ss = second_ss.reshape((-1, 1))
 
-    fd_pd = correlation_proba(quantiles_pd, first_rs, first_size, ss=first_ss)
-    fd_md = correlation_proba(quantiles_md, first_rs, first_size, ss=first_ss)
-    sd = correlation_proba(quantiles, second_rs, second_size, ss=second_ss)
+    fd_pd = correlation_cdf(quantiles_pd, first_rs, first_size, ss=first_ss)
+    fd_md = correlation_cdf(quantiles_md, first_rs, first_size, ss=first_ss)
+    sd = correlation_cdf(quantiles, second_rs, second_size, ss=second_ss)
 
     if (alternative == "less"):
         return np.sum(
@@ -427,7 +427,7 @@ def _correlation_diff_analytic_proba_1(
         axis=1
     )
 
-def _correlation_diff_analytic_proba_2(
+def _correlation_diff_analytic_cdf_2(
     first_rs, first_size,
     second_rs, second_size,
     delta,
@@ -435,7 +435,7 @@ def _correlation_diff_analytic_proba_2(
     alternative="two-sided"
 ):
     """
-    Similar to "correlation_diff_analytic_proba". It
+    Similar to "correlation_diff_analytic_cdf". It
     is used in the case: only one of "first_rs" and "second_rs"
     is near to -1 or 1.
     """
@@ -446,11 +446,11 @@ def _correlation_diff_analytic_proba_2(
     if (correlation == "spearman"):
         correlation_std = spearmanr_std
         correlation_mean = spearmanr_mean
-        correlation_proba = spearmanr_proba
+        correlation_cdf = spearmanr_cdf
     elif (correlation == "pearson"):
         correlation_std = pearsonr_std
         correlation_mean = pearsonr_mean
-        correlation_proba = pearsonr_proba
+        correlation_cdf = pearsonr_cdf
 
     if (alternative == "less"):
         proba = np.zeros(len(delta))
@@ -461,12 +461,12 @@ def _correlation_diff_analytic_proba_2(
         f_indexes = (np.abs(first_rs) >= 1 - EPS2)
         s_indexes = (np.abs(second_rs) >= 1 - EPS2)
 
-        proba[f_indexes] = 1 - correlation_proba(
+        proba[f_indexes] = 1 - correlation_cdf(
             bound(first_rs[f_indexes] - delta[f_indexes], -1 + EPS1, 1 - EPS1),
             second_rs[f_indexes], second_size, ss=second_ss[f_indexes]
         )
 
-        proba[s_indexes] = correlation_proba(
+        proba[s_indexes] = correlation_cdf(
             bound(second_rs[s_indexes] + delta[s_indexes], -1 + EPS1, 1 - EPS1),
             first_rs[s_indexes], first_size, ss=first_ss[s_indexes]
         )
@@ -484,19 +484,19 @@ def _correlation_diff_analytic_proba_2(
     p_indexes = (second_rs >= 1 - EPS2)
     m_indexes = (second_rs <= -1 + EPS2)
 
-    proba[p_indexes] = 1 - correlation_proba(
+    proba[p_indexes] = 1 - correlation_cdf(
         bound(1 - delta[p_indexes], -1 + EPS1, 1 - EPS1),
         first_rs[p_indexes], first_size, ss=first_ss[p_indexes]
     )
 
-    proba[m_indexes] = correlation_proba(
+    proba[m_indexes] = correlation_cdf(
         bound(-1 + delta[m_indexes], -1 + EPS1, 1 - EPS1),
         first_rs[m_indexes], first_size, ss=first_ss[m_indexes]
     )
 
     return proba
 
-def _correlation_diff_analytic_proba_3(
+def _correlation_diff_analytic_cdf_3(
     first_rs, first_size,
     second_rs, second_size,
     delta,
@@ -504,7 +504,7 @@ def _correlation_diff_analytic_proba_3(
     alternative="two-sided"
 ):
     """
-    Similar to "correlation_diff_analytic_proba". It
+    Similar to "correlation_diff_analytic_cdf". It
     is used in the case of both "first_rs"" and "second_rs"
     are close to 1 or -1.
     """
@@ -520,7 +520,7 @@ def _correlation_diff_analytic_proba_3(
     proba[np.abs(first_rs - second_rs) <= delta] = 1
     return proba
 
-def diff_bootstrap_proba(
+def diff_bootstrap_cdf(
     first_sample, second_sample,
     delta,
     alternative="two-sided"
