@@ -73,7 +73,7 @@ def corr_diff_test(
         second_ss *= np.sqrt(1.5)
 
     stat = np.arctanh(first_rs) - np.arctanh(second_rs)
-    std = first_ss + second_ss
+    std = np.sqrt(first_ss**2 + second_ss**2)
     
     pvalue = None
     
