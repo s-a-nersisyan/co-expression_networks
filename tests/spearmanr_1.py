@@ -20,7 +20,7 @@ print("Analytic computations")
 deltas = np.linspace(-2, 2, 1000)
 probas = []
 for d in tqdm.tqdm(deltas):
-    probas.append(core.correlation_diff_proba(
+    probas.append(core.correlation_diff_cdf(
         first_target, [first_sample],
         second_target, [second_sample],
         d,
@@ -35,7 +35,7 @@ print("Bootstrap computations")
 deltas = np.linspace(-2, 2, 100)
 probas = []
 for d in tqdm.tqdm(deltas):
-    probas.append(core.correlation_diff_proba(
+    probas.append(core.correlation_diff_cdf(
         first_target, [first_sample],
         second_target, [second_sample],
         d,
