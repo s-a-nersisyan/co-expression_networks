@@ -8,4 +8,5 @@ REFERENCE_GROUP = "Normal"
 EXPERIMENTAL_GROUP = "Tumor"
 
 CORRELATION = "spearman"
+ALTERNATIVE = "two-sided"
 PROCESS_NUMBER = 8
