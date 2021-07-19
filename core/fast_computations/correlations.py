@@ -1,8 +1,10 @@
 import numpy as np
 from scipy.stats import rankdata
 
-from .correlation_computations import _pearsonr
+from .correlation_computations import \
+        _pearsonr, _pearsonr_unindexed
 from .correlation_computations import UNDEFINED_CORR_VALUE
+
 
 def _get_num_ind(indexes, *args):
     index_hash = {
@@ -17,78 +19,94 @@ def _get_num_ind(indexes, *args):
 
     return result 
 
-
 def spearmanr(
     df,
-    source_indexes, target_indexes,
+    source_indexes=None, target_indexes=None,
     process_num=1,
     numerical_index=False
 ):
-    if not numerical_index:
-        source_num_indexes, target_num_indexes = _get_num_ind(
-            df.index.to_list(),
-            source_indexes, target_indexes
-        )
-     
-    else:
-        source_num_indexes = source_indexes
-        target_num_indexes = target_indexes
- 
+
     data = rankdata(
         df.to_numpy(copy=True),
         axis=1
     ).astype("float32")
-    source_num_indexes = np.array(
-        source_num_indexes
-    ).astype("int32")
-    target_num_indexes = np.array(
-        target_num_indexes
-    ).astype("int32")
- 
+
     print("Correlation computations")
-    corrs = _pearsonr(
-        data,
-        source_num_indexes,
-        target_num_indexes,
-        process_num
-    )
+    if source_indexes and target_indexes:
+        if not numerical_index:
+            source_num_indexes, target_num_indexes = _get_num_ind(
+                df.index.to_list(),
+                source_indexes, target_indexes
+            )
+         
+        else:
+            source_num_indexes = source_indexes
+            target_num_indexes = target_indexes
+     
+        source_num_indexes = np.array(
+            source_num_indexes
+        ).astype("int32")
+        target_num_indexes = np.array(
+            target_num_indexes
+        ).astype("int32")
+     
+        corrs = _pearsonr(
+            data,
+            source_num_indexes,
+            target_num_indexes,
+            process_num
+        )
+
+    else:
+        corrs = _pearsonr_unindexed(
+            data,
+            process_num
+        )
+
 
     corrs[corrs == UNDEFINED_CORR_VALUE] = None
     return corrs
 
-
-
 def pearsonr(
     df,
-    source_indexes, target_indexes,
+    source_indexes=None, target_indexes=None,
     process_num=1,
     numerical_index=False
 ):  
-    if not numerical_index:
-        source_num_indexes, target_num_indexes = _get_num_ind(
-            df.index.to_list(),
-            source_indexes, target_indexes
+       
+    data = df.to_numpy(copy=True).astype("float32")
+    
+    print("Correlation computations")
+    if source_indexes and target_indexes:
+        if not numerical_index:
+            source_num_indexes, target_num_indexes = _get_num_ind(
+                df.index.to_list(),
+                source_indexes, target_indexes
+            )
+
+        else:
+            source_num_indexes = source_indexes
+            target_num_indexes = target_indexes
+     
+        source_num_indexes = np.array(
+            source_num_indexes
+        ).astype("int32")
+        target_num_indexes = np.array(
+            target_num_indexes
+        ).astype("int32")
+    
+        corrs = _pearsonr(
+            data,
+            source_num_indexes,
+            target_num_indexes,
+            process_num
         )
 
     else:
-        source_num_indexes = source_indexes
-        target_num_indexes = target_indexes
-        
-    data = df.to_numpy(copy=True).astype("float32")
-    source_num_indexes = np.array(
-        source_num_indexes
-    ).astype("int32")
-    target_num_indexes = np.array(
-        target_num_indexes
-    ).astype("int32")
-    
-    print("Correlation computations")
-    corrs = _pearsonr(
-        data,
-        source_num_indexes,
-        target_num_indexes,
-        process_num
-    )
+        corrs = _pearsonr_unindexed(
+            data,
+            process_num
+        )
 
     corrs[corrs == UNDEFINED_CORR_VALUE] = None
     return corrs
