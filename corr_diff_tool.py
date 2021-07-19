@@ -23,30 +23,15 @@ interaction_df = None
 if (INTERACTION_PATH):
     interaction_df = pd.read_csv(INTERACTION_PATH, sep=",", index_col=0)
     source_indexes = interaction_df["Source"]
-    taget_indexes = interaction_df["Target"]
+    target_indexes = interaction_df["Target"]
 
 else:
-    index_arr = np.array(np.meshgrid(
-        np.arange(len(data_df)),
-        np.arange(len(data_df))
-    )).T.reshape(-1, 2)
-    
-    index_arr = index_arr[:(len(index_arr) + 1) // 2, :]
-    # index_arr = index_arr[:10 // 2, :]
-    
-    source_indexes = index_arr[:, 0]
-    target_indexes = index_arr[:, 1]
-    
-    # data_indexes = np.array(data_df.index.to_list())
-    # source_indexes = data_indexes[source_num_indexes]
-    # target_indexes = data_indexes[target_num_indexes]
-    
-    # interaction_df = pd.DataFrame(source_indexes, columns=["Source"])
-    # interaction_df["Target"] = target_indexes
+    source_indexes=None
+    target_indexes=None
 
-numerical_flag = True
-if INTERACTION_PATH:
-    numerical_flag = False
+# numerical_flag = True
+# if INTERACTION_PATH:
+#     numerical_flag = False
 
 print("Reference correlations")
 ref_corrs = correlation(
@@ -58,7 +43,8 @@ ref_corrs = correlation(
     ],
     source_indexes,
     target_indexes,
-    numerical_index=numerical_flag
+    process_num=PROCESS_NUMBER
+    # numerical_index=numerical_flag
 )
 
 print("Experimental correlations")
@@ -71,13 +57,19 @@ exp_corrs = correlation(
     ],
     source_indexes,
     target_indexes,
-    numerical_index=numerical_flag
+    process_num=PROCESS_NUMBER
+    # numerical_index=numerical_flag
 )
 
+print("Test phase")
 stat, pvalue = core.corr_diff_test(
-    ref_corrs, len(description_df.loc[description_df["Group"] == REFERENCE_GROUP]),
-    exp_corrs, len(description_df.loc[description_df["Group"] == EXPERIMENTAL_GROUP]),
-    correlation=CORRELATION
+    ref_corrs.astype("float32"), np.zeros(len(ref_corrs), dtype="int32") +
+        len(description_df.loc[description_df["Group"] == REFERENCE_GROUP]),
+    exp_corrs.astype("float32"), np.zeros(len(exp_corrs), dtype="int32") +
+        len(description_df.loc[description_df["Group"] == EXPERIMENTAL_GROUP]),
+    correlation=CORRELATION,
+    alternative=ALTERNATIVE,
+    process_num=PROCESS_NUMBER
 )
 
 adjusted_pvalue = pvalue * len(pvalue) / \
@@ -85,10 +77,29 @@ adjusted_pvalue = pvalue * len(pvalue) / \
 adjusted_pvalue[adjusted_pvalue > 1] = 1
 
 # Generate report
+print("Report phase")
 if INTERACTION_PATH:
     output_df = pd.DataFrame(interaction_df)
+
 else:
+    indexes = np.where(adjusted_pvalue < FDR_THRESHOLD)
+    ref_corrs = ref_corrs[indexes]
+    exp_corrs = exp_corrs[indexes]
+    stat = stat[indexes]
+    pvalue = pvalue[indexes]
+    adjusted_pvalue = adjusted_pvalue[indexes]
+    
+    df_indexes = data_df.index.to_numpy()
+    source_indexes = []
+    target_indexes = []
+    for ind in indexes:
+        s, t = core.paired_index(ind, len(df_indexes))
+        source_indexes.append(s)
+        target_indexes.append(t)
+
     output_df = pd.DataFrame()
+    output_df["Source"] = source_indexes
+    output_df["Target"] = target_indexes
 
 output_df["Reference"] = ref_corrs 
 output_df["Experimental"] = exp_corrs 
