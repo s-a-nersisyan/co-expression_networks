@@ -62,7 +62,7 @@ int pearsonr_thread(
             target_mean * target_mean; 
         
         if (source_var == 0 || target_var == 0) { 
-            correlation = -2;
+            correlation = UNDEFINED_CORR_VALUE;
         } else {
             correlation /= std::sqrt(source_var * target_var);
         }

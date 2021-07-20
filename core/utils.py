@@ -5,6 +5,8 @@ import math
 BOOTSTRAP_REPEATS = 10**3
 
 
+# This function is a copy of one placed in
+# C++ module
 def paired_index(index, base):
     i = (2 * base - 1) - np.sqrt((2 * base - 1)**2 - 8 * index)
     i /= 2
@@ -12,8 +14,6 @@ def paired_index(index, base):
 
     j = (index % base +  ((i + 2) * (i + 1) // 2) % base) % base 
     return i, j
-
-
 
 def bound(array, left, right):
     array = np.array(array)

@@ -7,7 +7,7 @@ def corr_diff_test(
     first_rs, first_size,
     second_rs, second_size,
     correlation="spearman",
-    alternative="two-seded",
+    alternative="two-sided",
     process_num=1 
 ):
     first_rs = np.array(first_rs, dtype="float32")
@@ -28,4 +28,3 @@ def corr_diff_test(
     pvalue[pvalue == UNDEFINED_CORR_DIFF_TEST_VALUE] = None
 
     return stat, pvalue
-
