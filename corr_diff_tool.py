@@ -17,7 +17,7 @@ description_df = pd.read_csv(DESCRIPTION_PATH, sep=",")
 if (CORRELATION == "spearman"):
     correlation = core.spearmanr
 else:
-    corr_test = core.pearsonr
+    correlation = core.pearsonr
 
 interaction_df = None
 if (INTERACTION_PATH):
@@ -82,7 +82,8 @@ if INTERACTION_PATH:
     output_df = pd.DataFrame(interaction_df)
 
 else:
-    indexes = np.where(adjusted_pvalue < FDR_THRESHOLD)
+    # indexes = np.where(adjusted_pvalue < FDR_THRESHOLD)
+    indexes = np.arange(100, dtype="int32")
     ref_corrs = ref_corrs[indexes]
     exp_corrs = exp_corrs[indexes]
     stat = stat[indexes]
@@ -94,8 +95,8 @@ else:
     target_indexes = []
     for ind in indexes:
         s, t = core.paired_index(ind, len(df_indexes))
-        source_indexes.append(s)
-        target_indexes.append(t)
+        source_indexes.append(df_indexes[s])
+        target_indexes.append(df_indexes[t])
 
     output_df = pd.DataFrame()
     output_df["Source"] = source_indexes
@@ -106,4 +107,4 @@ output_df["Experimental"] = exp_corrs
 output_df["Statistic"] = stat
 output_df["Pvalue"] = pvalue
 output_df["FDR"] = adjusted_pvalue
-output_df.to_csv(OUTPUT_DIR_PATH.rstrip("/") + "/report.csv", sep=",", index=None)
+output_df.to_csv(OUTPUT_DIR_PATH.rstrip("/") + "/{}_light_report.csv".format(CORRELATION), sep=",", index=None)
