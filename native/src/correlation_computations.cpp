@@ -301,11 +301,11 @@ int corr_diff_test_thread(
 		
 		float pvalue = UNDEFINED_CORR_DIFF_TEST_VALUE;
 		if (alternative == "less") {
-			pvalue = norm_cdf(stat * std);	
+			pvalue = norm_cdf(stat / std);	
 		} else if (alternative == "greater") {
-			pvalue = 1 - norm_cdf(stat * std);
+			pvalue = 1 - norm_cdf(stat / std);
 		} else if (alternative == "two-sided") {
-			pvalue = 2 * norm_cdf(-std::abs(stat) * std);			
+			pvalue = 2 * norm_cdf(-std::abs(stat) / std);			
 		}
 		
 		stat_ptr[ind] = stat;
