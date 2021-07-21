@@ -14,9 +14,12 @@ from .correlation_utils import \
     pearsonr_mean, pearsonr_std, pearsonr_cdf, \
     correlation_diff_cdf, correlation_diff_analytic_cdf
 
+# Test utils
+from .correlation_tests import \
+    corr_diff_test as py_corr_diff_test
+
+# Utils
 from .utils import \
     paired_index
 
-# Test utils
-# from .correlation_tests import \
-#     corr_diff_test
+
