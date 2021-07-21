@@ -92,6 +92,7 @@ stat, pvalue = core.corr_diff_test(
 adjusted_pvalue = pvalue * len(pvalue) / \
     scipy.stats.rankdata(pvalue)
 adjusted_pvalue[adjusted_pvalue > 1] = 1
+adjusted_pvalue = adjusted_pvalue.flatten()
 
 # Generate report
 print("Report phase")
@@ -99,7 +100,7 @@ if INTERACTION_PATH:
     output_df = pd.DataFrame(interaction_df)
 
 else:
-    indexes = np.where(adjusted_pvalue < FDR_THRESHOLD)
+    indexes = np.where(adjusted_pvalue < FDR_THRESHOLD)[0]
     # indexes = np.arange(len(adjusted_pvalue), dtype="int32")
     ref_corrs = ref_corrs[indexes]
     exp_corrs = exp_corrs[indexes]
