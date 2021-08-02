@@ -63,7 +63,7 @@ def spearmanr_mean(source, target):
     return scipy.stats.spearmanr(source, target)[0]
 
 def spearmanr_cdf(quantiles, rs, size, ss=None):
-    """Computes quaniles of spearman correlation distribution
+    """Computes cdf of spearman correlation distribution
 
     Parameters
     ----------
@@ -135,7 +135,7 @@ def pearsonr_mean(source, target):
     return scipy.stats.pearsonr(source, target)[0]
 
 def pearsonr_cdf(quantiles, rs, size, ss=None):
-    """Computes quaniles of pearson correlation distribution
+    """Computes cdf of pearson correlation distribution
 
     Parameters
     ----------
