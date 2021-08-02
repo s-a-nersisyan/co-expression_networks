@@ -93,7 +93,27 @@ def spearmanr_cdf(quantiles, rs, size, ss=None):
         size - 2
     )
 
-def spearmanr_proba(confidence, rs, size):
+def spearmanr_ppf(proba, rs, size):
+    """Computes quantiles of spearman correlation distribution
+
+    Parameters
+    ----------
+    proba: numerical value or numpy.array
+    rs: numerical value or numpy.array
+        Sperman correlation(s).
+    size: numerical value or numpy.array
+        Size(s) of sample(s) that were used to compute
+        "rs".
+    Returns
+    -------
+    Quantiles corrsponding to probas
+    """
+    ss = spearmanr_std(rs, size)  
+    z_a = stats.norm.ppf(proba)
+
+    return np.tanh(np.arctanh(rs) + sigma * z_a)
+
+def spearmanr_conf_interval(confidence, rs, size):
     """Computes confidence interval of spearman correlation
 
     Parameters
@@ -108,14 +128,9 @@ def spearmanr_proba(confidence, rs, size):
     -------
     tuple of numerical value or numpy.array respectively to "confidence" and "rs"
     """
-    sigma = (1 + rs ** 2 / 2) / (size - 3)
-    sigma = np.sqrt(sigma)
-    
-    z_a = stats.norm.ppf(1 - (1 - confidence) / 2)
-    sigma *= z_a
-
-    return np.tanh(np.arctanh(rs) - sigma), np.tanh(np.arctanh(rs) + sigma) 
-
+    return (spearmanr_ppf((1 + confidence) / 2, rs, size),
+            spearmanr_ppf((1 - confidence) / 2, rs, size))
+           
 
 
 # Pearsonr block
@@ -187,6 +202,44 @@ def pearsonr_cdf(quantiles, rs, size, ss=None):
     return scipy.stats.norm.cdf(
         (np.arctanh(quantiles) - np.arctanh(rs)) / ss
     )
+
+def pearsonr_ppf(proba, rs, size):
+    """Computes quantiles of pearson correlation distribution
+
+    Parameters
+    ----------
+    proba: numerical value or numpy.array
+    rs: numerical value or numpy.array
+        Sperman correlation(s).
+    size: numerical value or numpy.array
+        Size(s) of sample(s) that were used to compute
+        "rs".
+    Returns
+    -------
+    Quantiles corrsponding to probas
+    """
+    ss = pearsonr_std(rs, size)  
+    z_a = stats.norm.ppf(proba)
+
+    return np.tanh(np.arctanh(rs) + sigma * z_a)
+
+def pearsonr_conf_interval(confidence, rs, size):
+    """Computes confidence interval of pearson correlation
+
+    Parameters
+    ----------
+    confidence: numerical value or numpy.array
+    rs: numerical value or numpy.array
+        Sperman correlation(s).
+    size: numerical value or numpy.array
+        Size(s) of sample(s) that were used to compute
+        "rs".
+    Returns
+    -------
+    tuple of numerical value or numpy.array respectively to "confidence" and "rs"
+    """
+    return (pearsonr_ppf((1 + confidence) / 2, rs, size),
+            pearsonr_ppf((1 - confidence) / 2, rs, size))
 
 
 # Correlation difference block
