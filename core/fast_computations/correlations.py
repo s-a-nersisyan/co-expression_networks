@@ -25,14 +25,11 @@ def spearmanr(
     process_num=1,
     numerical_index=False
 ):
+   
+    data = df.to_numpy(copy=True).astype("float32")
 
-    data = rankdata(
-        df.to_numpy(copy=True),
-        axis=1
-    ).astype("float32")
-
-    print("Correlation computations")
-    if source_indexes and target_indexes:
+    # print("Correlation computations")
+    if np.all(source_indexes) and np.all(target_indexes):
         if not numerical_index:
             source_num_indexes, target_num_indexes = _get_num_ind(
                 df.index.to_list(),
@@ -42,22 +39,35 @@ def spearmanr(
         else:
             source_num_indexes = source_indexes
             target_num_indexes = target_indexes
-     
+
         source_num_indexes = np.array(
             source_num_indexes
         ).astype("int32")
         target_num_indexes = np.array(
             target_num_indexes
         ).astype("int32")
-     
+
+        indexes = set(source_num_indexes)
+        indexes.update(target_num_indexes)
+        indexes = list(indexes)
+        data[indexes] = rankdata(
+                data[indexes],
+                axis=1
+        )
+ 
         corrs = _pearsonr(
             data,
             source_num_indexes,
             target_num_indexes,
             process_num
         )
-
+    
     else:
+        data = rankdata(
+                data,
+                axis=1
+        )
+
         corrs = _pearsonr_unindexed(
             data,
             process_num
@@ -73,11 +83,11 @@ def pearsonr(
     process_num=1,
     numerical_index=False
 ):  
-       
+      
     data = df.to_numpy(copy=True).astype("float32")
     
-    print("Correlation computations")
-    if source_indexes and target_indexes:
+    # print("Correlation computations")
+    if np.all(source_indexes) and np.all(target_indexes):
         if not numerical_index:
             source_num_indexes, target_num_indexes = _get_num_ind(
                 df.index.to_list(),
@@ -110,8 +120,3 @@ def pearsonr(
 
     corrs[corrs == UNDEFINED_CORR_VALUE] = None
     return corrs
-
-
-
-
-
