@@ -53,7 +53,7 @@ def spearmanr(
         data[indexes] = rankdata(
                 data[indexes],
                 axis=1
-        )
+        ).astype("float32")
  
         corrs = _pearsonr(
             data,
@@ -66,7 +66,7 @@ def spearmanr(
         data = rankdata(
                 data,
                 axis=1
-        )
+        ).astype("float32")
 
         corrs = _pearsonr_unindexed(
             data,
