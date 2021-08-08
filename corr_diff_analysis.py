@@ -90,10 +90,12 @@ adjusted_pvalue = np.array(output_df["Pvalue"] * len(output_df["Pvalue"]) / \
 adjusted_pvalue[adjusted_pvalue > 1] = 1
 adjusted_pvalue = adjusted_pvalue.flatten()
 output_df["FDR"] = adjusted_pvalue
+output_df = output_df[output_df["FDR"] < FDR_THRESHOLD]
+
 output_df = output_df.sort_values(["FDR", "Pvalue"])
 output_df.to_csv(
         OUTPUT_DIR_PATH.rstrip("/") +
-        "/{}_analisis.csv".format(CORRELATION),
+        "/{}_analysis.csv".format(CORRELATION),
         sep=",",
         index=None
 )
