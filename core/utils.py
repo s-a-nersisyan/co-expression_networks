@@ -5,15 +5,23 @@ import math
 BOOTSTRAP_REPEATS = 10**3
 
 
-# This function is a copy of one placed in
-# C++ module
-def paired_index(index, base):
-    i = (2 * base - 1) - np.sqrt((2 * base - 1)**2 - 8 * index)
-    i /= 2
-    i = math.floor(i)
-
-    j = (index % base +  ((i + 2) * (i + 1) // 2) % base) % base 
-    return i, j
+# This function is a copy of the one placed in
+# fast_computations/correlations.py
+def get_num_ind(indexes, *args):
+    index_hash = {
+        ind: num for num, ind in enumerate(indexes)
+    }
+    
+    result = []
+    for arg in args:
+        result.append([
+            index_hash[ind] for ind in arg
+        ])
+    
+    if (len(result) == 1):
+        return result[0]
+    
+    return result
 
 def bound(array, left, right):
     array = np.array(array)
