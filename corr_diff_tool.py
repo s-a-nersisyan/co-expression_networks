@@ -129,4 +129,9 @@ output_df["Pvalue"] = pvalue
 # output_df["PyPvalue"] = py_pvalue
 output_df["FDR"] = adjusted_pvalue
 output_df = output_df.sort_values(["FDR", "Pvalue"])
-output_df.to_csv(OUTPUT_DIR_PATH.rstrip("/") + "/{}_report.csv".format(CORRELATION), sep=",", index=None)
+output_df.to_csv(
+    OUTPUT_DIR_PATH.rstrip("/") + \
+    "/{}_report.csv".format(CORRELATION),
+    sep=",",
+    index=None
+)
