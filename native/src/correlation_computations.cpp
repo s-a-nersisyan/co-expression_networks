@@ -9,6 +9,8 @@
 #include <utility>
 #include <queue>
 
+#include "utils/utils.h"
+
 namespace py = pybind11;
 
 using NumPyFloatArray = py::array_t<float, py::array::c_style>;
@@ -17,6 +19,7 @@ using NumPyIntArray = py::array_t<int32_t, py::array::c_style>;
 
 const float UNDEFINED_CORR_VALUE = -2;
 const float UNDEFINED_CORR_DIFF_TEST_VALUE = -2;
+
 
 // Correlation block
 
@@ -139,13 +142,6 @@ NumPyFloatArray pearsonr(
     }
 
     return corrs;
-}
-
-std::pair<int, int> paired_index(int index, int base) {
-	int i = std::floor(((2 * base - 1) - std::sqrt((2 * base - 1) * 
-			(2 * base - 1) - 8 * index)) / 2);
-	int j = (index % base + ((i + 2) * (i + 1) / 2) % base) % base; 
-	return std::pair<int, int>(i, j);
 }
 
 int pearsonr_unindexed_thread(

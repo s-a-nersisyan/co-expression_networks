@@ -8,6 +8,11 @@ from .fast_computations.correlations import \
 from .fast_computations.tests import \
     corr_diff_test
 
+# Fast utils
+from .fast_computations.utils import \
+    paired_index, unary_index, \
+    paired_array, paired_reshape
+
 # Probabilistic utlis
 from .correlation_utils import \
     spearmanr_mean, spearmanr_std, spearmanr_cdf, \
@@ -20,6 +25,5 @@ from .correlation_tests import \
 
 # Utils
 from .utils import \
-    paired_index
-
-
+    get_num_ind, \
+    bound
