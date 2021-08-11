@@ -128,8 +128,8 @@ def spearmanr_conf_interval(confidence, rs, size):
     -------
     tuple of numerical value or numpy.array respectively to "confidence" and "rs"
     """
-    return (spearmanr_ppf((1 + confidence) / 2, rs, size),
-            spearmanr_ppf((1 - confidence) / 2, rs, size))
+    return (spearmanr_ppf((1 - confidence) / 2, rs, size),
+            spearmanr_ppf((1 + confidence) / 2, rs, size))
            
 
 
@@ -238,8 +238,8 @@ def pearsonr_conf_interval(confidence, rs, size):
     -------
     tuple of numerical value or numpy.array respectively to "confidence" and "rs"
     """
-    return (pearsonr_ppf((1 + confidence) / 2, rs, size),
-            pearsonr_ppf((1 - confidence) / 2, rs, size))
+    return (pearsonr_ppf((1 - confidence) / 2, rs, size),
+            pearsonr_ppf((1 + confidence) / 2, rs, size))
 
 
 # Correlation difference block
