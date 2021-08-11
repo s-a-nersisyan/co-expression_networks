@@ -111,7 +111,7 @@ def spearmanr_ppf(proba, rs, size):
     ss = spearmanr_std(rs, size)  
     z_a = scipy.stats.norm.ppf(proba)
 
-    return np.tanh(np.arctanh(rs) + sigma * z_a)
+    return np.tanh(np.arctanh(rs) + ss * z_a)
 
 def spearmanr_conf_interval(confidence, rs, size):
     """Computes confidence interval of spearman correlation
@@ -221,7 +221,7 @@ def pearsonr_ppf(proba, rs, size):
     ss = pearsonr_std(rs, size)  
     z_a = scipy.stats.norm.ppf(proba)
 
-    return np.tanh(np.arctanh(rs) + sigma * z_a)
+    return np.tanh(np.arctanh(rs) + ss * z_a)
 
 def pearsonr_conf_interval(confidence, rs, size):
     """Computes confidence interval of pearson correlation
