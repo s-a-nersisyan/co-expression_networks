@@ -109,7 +109,7 @@ def spearmanr_ppf(proba, rs, size):
     Quantiles corrsponding to probas
     """
     ss = spearmanr_std(rs, size)  
-    z_a = stats.norm.ppf(proba)
+    z_a = scipy.stats.norm.ppf(proba)
 
     return np.tanh(np.arctanh(rs) + sigma * z_a)
 
@@ -219,7 +219,7 @@ def pearsonr_ppf(proba, rs, size):
     Quantiles corrsponding to probas
     """
     ss = pearsonr_std(rs, size)  
-    z_a = stats.norm.ppf(proba)
+    z_a = scipy.stats.norm.ppf(proba)
 
     return np.tanh(np.arctanh(rs) + sigma * z_a)
 
