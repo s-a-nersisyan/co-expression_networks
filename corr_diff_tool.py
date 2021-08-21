@@ -5,12 +5,39 @@ import scipy.stats
 import sys
 import time
 import tqdm
+import json
 
 # Import python package
 import core
-from config import *
+
+# Arg parser
+import argparse
 
 
+# Argument parser
+parser = argparse.ArgumentParser()
+parser.add_argument("config_path")
+args = parser.parse_args()
+
+# Load config file
+CONFIG_PATH = args.config_path
+config = json.load(open(CONFIG_PATH, "r"))
+
+DATA_PATH = config["data_path"]
+DESCRIPTION_PATH = config["description_path"]
+INTERACTION_PATH = config["interaction_path"]
+OUTPUT_DIR_PATH = config["output_dir_path"]
+
+REFERENCE_GROUP = config["reference_group"]
+EXPERIMENTAL_GROUP = config["experimnetal_group"]
+
+CORRELATION = config["correlation"]
+ALTERNATIVE = config["alternative"]
+PROCESS_NUMBER = config["process_number"]
+
+FDR_THRESHOLD = config["fdr_treshold"]
+
+# Main part
 data_df = pd.read_csv(DATA_PATH, sep=",", index_col=0)
 description_df = pd.read_csv(DESCRIPTION_PATH, sep=",")
 
@@ -25,9 +52,17 @@ else:
 
 interaction_df = None
 if (INTERACTION_PATH):
-    interaction_df = pd.read_csv(INTERACTION_PATH, sep=",", index_col=0)
+    interaction_df = pd.read_csv(INTERACTION_PATH, sep=",")
+    
+    # TODO: raise error if a "Source", "Target" interaction pair
+    # is not found in data molecules
+    data_molecules = set(data_df.index.to_list())
+    interaction_df = interaction_df[interaction_df["Source"].isin(data_molecules)]
+    interaction_df = interaction_df[interaction_df["Target"].isin(data_molecules)]
+    
     source_indexes = interaction_df["Source"]
     target_indexes = interaction_df["Target"]
+    
 
 else:
     source_indexes=None

@@ -5,10 +5,10 @@ import scipy.stats
 import sys
 import time
 import tqdm
+import json
 
 # Import python package
 import core
-from config import *
 
 # Arg parser
 import argparse
@@ -16,13 +16,38 @@ import argparse
 
 # Argument parser
 parser = argparse.ArgumentParser()
+parser.add_argument("config_path")
 parser.add_argument("-o", "--oriented", action="store_true")
 args = parser.parse_args()
+
+# Load config file
+CONFIG_PATH = args.config_path
+config = json.load(open(CONFIG_PATH, "r"))
+
+DATA_PATH = config["data_path"]
+DESCRIPTION_PATH = config["description_path"]
+INTERACTION_PATH = config["interaction_path"]
+OUTPUT_DIR_PATH = config["output_dir_path"]
+
+REFERENCE_GROUP = config["reference_group"]
+EXPERIMENTAL_GROUP = config["experimnetal_group"]
+
+CORRELATION = config["correlation"]
+ALTERNATIVE = config["alternative"]
+PROCESS_NUMBER = config["process_number"]
+
+FDR_THRESHOLD = config["fdr_treshold"]
+
 ORIENTED = args.oriented
 if not INTERACTION_PATH:
     ORIENTED = False
 
-# The main part
+# Main part
+
+# TODO: if interaction err was rased
+# the following string is superfluous 
+data_df = pd.read_csv(DATA_PATH, sep=",", index_col=0)
+
 report_df = pd.read_csv(
         OUTPUT_DIR_PATH.rstrip("/") + 
         "/{}_report.csv".format(CORRELATION),
@@ -40,11 +65,12 @@ def get_occurrence(array):
     return occurrence
 
 # Report indexing
-report_occurrence = get_occurrence(list(report_df["Source"]))
-if not ORIENTED:
-    report_occurrence.update(
-            get_occurrence(list(report_df["Target"]))
-    )
+if ORIENTED:
+    report_occurrence = get_occurrence(list(report_df["Source"]))
+else:
+    ll = list(report_df["Source"])
+    ll.extend(list(report_df["Target"]))
+    report_occurrence = get_occurrence(ll)
 
 report_interaction_number = 0
 for index in report_occurrence:
@@ -52,13 +78,21 @@ for index in report_occurrence:
 
 # Description indexing
 if INTERACTION_PATH:
-    description_df = pd.read_csv(DESCRIPTION_PATH, sep=",")
+    interaction_df = pd.read_csv(INTERACTION_PATH, sep=",")
+
+    # TODO: raise error if a "Source", "Target" interaction pair
+    # is not found in data molecules
+    data_molecules = set(data_df.index.to_list())
+    interaction_df = interaction_df[interaction_df["Source"].isin(data_molecules)]
+    interaction_df = interaction_df[interaction_df["Target"].isin(data_molecules)]
     
-    initial_occurrence = get_occurrence(list(description_df["Source"]))
-    if not ORIENTED:
-        initial_occurrence.update(
-                get_occurrence(list(description_df["Target"]))
-        )
+    # TODO: copies should be removed
+    if ORIENTED:
+        initial_occurrence = get_occurrence(list(interaction_df["Source"]))
+    else:
+        ll = list(interaction_df["Source"])
+        ll.extend(list(interaction_df["Target"]))
+        initial_occurrence = get_occurrence(ll)
     
     initial_interaction_number = 0
     for index in initial_occurrence:
@@ -100,9 +134,9 @@ output_df.to_csv(
         index=None
 )
 
-output_df[output_df["FDR"] < FDR_THRESHOLD]["Molecule"].to_csv(
-        OUTPUT_DIR_PATH.rstrip("/") +
-        "/{}_molecules.txt".format(CORRELATION),
-        sep=" ",
-        index=None
-)
+# output_df[output_df["FDR"] < FDR_THRESHOLD]["Molecule"].to_csv(
+#         OUTPUT_DIR_PATH.rstrip("/") +
+#         "/{}_molecules.txt".format(CORRELATION),
+#         sep=" ",
+#         index=None
+# )
