@@ -10,15 +10,23 @@ import tqdm
 import json
 
 import seaborn as sns
+import matplotlib.pyplot as plt
 
 # Import python package
 import core
 
 CORR_LEFT_BOUND = -1 + 1e-6
 CORR_RIGHT_BOUND = 1 - 1e-6
+MAX_DISTANCE = 1e10
 
 # Arg parser
 import argparse
+
+# Cluster
+from sklearn.cluster import \
+    AgglomerativeClustering
+from scipy.cluster import \
+    hierarchy
 
 
 # Argument parser
@@ -144,15 +152,10 @@ if not INTERACTION_PATH:
         CORR_LEFT_BOUND, CORR_RIGHT_BOUND
     )
 
-    print("Save cluster table")
+    print("Store process")
     cluster_data = np.arctanh(sign_ref_corrs) - \
         np.arctanh(sign_exp_corrs) 
-    # np.save(
-    #     OUTPUT_DIR_PATH.rstrip("/") + \
-    #     "/{}_cluster.npy".format(CORRELATION),
-    #     cluster_data
-    # )
-
+    
     cluster_df = pd.DataFrame(
         cluster_data,
         columns=data_df.index.to_list()
@@ -163,8 +166,8 @@ if not INTERACTION_PATH:
         "/{}_cluster.csv".format(CORRELATION),
         sep=",", index=None
     )
-    print("End of save process")
-
+    
+    print("Cluster process")
     cluster_df = cluster_df.set_index("Molecule")
     plot = sns.clustermap(cluster_df)
     plot.savefig(
@@ -221,11 +224,12 @@ else:
         if len(intersection) > 0: 
             distances[(first, second)] /= len(intersection)
         else:
-            distances[(first, second)] = 1.
+            distances[(first, second)] = MAX_DISTANCE
 
     sources = []
     targets = []
     dists = []
+    
     print("Store process")
     for key in distances:
         source, target = key
@@ -243,4 +247,16 @@ else:
         "/{}_cluster.csv".format(CORRELATION),
         sep=",",
         index=None
+    )
+
+    print("Cluster process")
+    distance_matrix = cluster_df["Distance"].to_numpy()
+    np.nan_to_num(distance_matrix, nan=MAX_DISTANCE, copy=False)
+    dendrogram = hierarchy.dendrogram(hierarchy.linkage(
+        distance_matrix, method="ward"    
+    ))
+
+    plt.savefig(
+        OUTPUT_DIR_PATH.rstrip("/") + \
+        "/{}_cluster.png".format(CORRELATION)
     )
