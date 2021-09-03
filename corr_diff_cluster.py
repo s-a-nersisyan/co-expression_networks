@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 # Import python package
 import core
 
-CORR_LEFT_BOUND = -1 + 1e-6
-CORR_RIGHT_BOUND = 1 - 1e-6
+CORR_LEFT_BOUND = -1. + 1e-6
+CORR_RIGHT_BOUND = 1. - 1e-6
 MAX_DISTANCE = 1e10
 
 # Arg parser
@@ -25,9 +25,11 @@ import argparse
 # Cluster
 from sklearn.cluster import \
     AgglomerativeClustering
+from sklearn import manifold
 from scipy.cluster import \
     hierarchy
-
+from scipy.spatial import \
+    distance
 
 # Argument parser
 parser = argparse.ArgumentParser()
@@ -107,6 +109,11 @@ ref_corrs = correlation(
     process_num=PROCESS_NUMBER
 )
 
+ref_corrs = core.bound(
+    ref_corrs,
+    CORR_LEFT_BOUND, CORR_RIGHT_BOUND
+)
+
 print("Experimental correlations")
 exp_corrs = correlation(
     data_df[
@@ -118,6 +125,11 @@ exp_corrs = correlation(
     source_indexes,
     target_indexes,
     process_num=PROCESS_NUMBER
+)
+
+exp_corrs = core.bound(
+    exp_corrs,
+    CORR_LEFT_BOUND, CORR_RIGHT_BOUND
 )
 
 print("Graph calculations")
@@ -135,6 +147,11 @@ if not INTERACTION_PATH:
         significant_indexes,
         len(data_df)
     ) 
+
+    sign_ref_corrs = core.bound(
+        sign_ref_corrs,
+        CORR_LEFT_BOUND, CORR_RIGHT_BOUND
+    )
     
     sign_exp_corrs = core.paired_reshape(
         exp_corrs,
@@ -142,16 +159,11 @@ if not INTERACTION_PATH:
         len(data_df)
     )
     
-    sign_ref_corrs = core.bound(
-        sign_ref_corrs,
-        CORR_LEFT_BOUND, CORR_RIGHT_BOUND
-    )
-    
     sign_exp_corrs = core.bound(
         sign_exp_corrs,
         CORR_LEFT_BOUND, CORR_RIGHT_BOUND
     )
-
+    
     print("Store process")
     cluster_data = np.arctanh(sign_ref_corrs) - \
         np.arctanh(sign_exp_corrs) 
@@ -251,7 +263,10 @@ else:
 
     print("Cluster process")
     distance_matrix = cluster_df["Distance"].to_numpy()
+    
+    # TODO: this procedure may be superfluous 
     np.nan_to_num(distance_matrix, nan=MAX_DISTANCE, copy=False)
+    
     dendrogram = hierarchy.dendrogram(hierarchy.linkage(
         distance_matrix, method="ward"    
     ))
@@ -259,4 +274,24 @@ else:
     plt.savefig(
         OUTPUT_DIR_PATH.rstrip("/") + \
         "/{}_cluster.png".format(CORRELATION)
+    )
+
+    plt.close()
+    print("Cluster plot")
+    distance_matrix = distance.squareform(
+        distance_matrix,
+        force="tomatrix"
+    )
+    
+    model = manifold.MDS(
+        n_components=2,
+        dissimilarity="precomputed"
+    )
+    model.fit(distance_matrix)
+    coords = model.fit_transform(distance_matrix)
+    plt.scatter(coords[:, 0], coords[:, 1])
+    
+    plt.savefig(
+        OUTPUT_DIR_PATH.rstrip("/") + \
+        "/{}_mds.png".format(CORRELATION)
     )

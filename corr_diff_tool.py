@@ -41,10 +41,6 @@ FDR_THRESHOLD = config["fdr_treshold"]
 data_df = pd.read_csv(DATA_PATH, sep=",", index_col=0)
 description_df = pd.read_csv(DESCRIPTION_PATH, sep=",")
 
-# Test mode
-# data_df = data_df.iloc[:100]
-# End of Test mode
-
 if (CORRELATION == "spearman"):
     correlation = core.spearmanr
 else:
@@ -63,14 +59,9 @@ if (INTERACTION_PATH):
     source_indexes = interaction_df["Source"]
     target_indexes = interaction_df["Target"]
     
-
 else:
     source_indexes=None
     target_indexes=None
-
-# numerical_flag = True
-# if INTERACTION_PATH:
-#     numerical_flag = False
 
 print("Reference correlations")
 ref_corrs = correlation(
@@ -136,14 +127,11 @@ if INTERACTION_PATH:
 
 else:
     indexes = np.where(adjusted_pvalue < FDR_THRESHOLD)[0]
-    # indexes = np.arange(len(adjusted_pvalue), dtype="int32")
     ref_corrs = ref_corrs[indexes]
     exp_corrs = exp_corrs[indexes]
     stat = stat[indexes]
     pvalue = pvalue[indexes]
     adjusted_pvalue = adjusted_pvalue[indexes]
-    # py_stat = py_stat[indexes]
-    # py_pvalue = py_pvalue[indexes]
     df_indexes = data_df.index.to_numpy()
     source_indexes = []
     target_indexes = []
@@ -160,10 +148,10 @@ output_df["Reference"] = ref_corrs
 output_df["Experimental"] = exp_corrs 
 output_df["Statistic"] = stat
 output_df["Pvalue"] = pvalue
-# output_df["PyStatistic"] = py_stat
-# output_df["PyPvalue"] = py_pvalue
 output_df["FDR"] = adjusted_pvalue
 output_df = output_df.sort_values(["FDR", "Pvalue"])
+
+output_df = output_df[output_df["Pvalue"] < FDR_THRESHOLD]
 output_df.to_csv(
     OUTPUT_DIR_PATH.rstrip("/") + \
     "/{}_report.csv".format(CORRELATION),
