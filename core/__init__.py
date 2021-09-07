@@ -26,4 +26,5 @@ from .correlation_tests import \
 # Utils
 from .utils import \
     get_num_ind, \
-    bound
+    bound, \
+    bootstrap_sample
