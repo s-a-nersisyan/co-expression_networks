@@ -61,7 +61,7 @@ data_df = pd.read_csv(DATA_PATH, sep=",", index_col=0)
 description_df = pd.read_csv(DESCRIPTION_PATH, sep=",")
 analysis_df = pd.read_csv(
     OUTPUT_DIR_PATH.rstrip("/") + \
-    "/{}_analysis.csv".format(CORRELATION),
+    "/{}_binom.csv".format(CORRELATION),
     sep=","
 )
 

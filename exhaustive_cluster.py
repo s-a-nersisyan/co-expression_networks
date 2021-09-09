@@ -65,7 +65,7 @@ description_df = pd.read_csv(DESCRIPTION_PATH, sep=",")
 if REDUCED:
     analysis_df = pd.read_csv(
         OUTPUT_DIR_PATH.rstrip("/") + \
-        "/{}_analysis.csv".format(CORRELATION),
+        "/{}_binom.csv".format(CORRELATION),
         sep=","
     )
 

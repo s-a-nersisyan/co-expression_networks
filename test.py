@@ -87,7 +87,7 @@ exp_corrs = correlation(
 )
 
 # The hypothesis check
-print("Test phase", len(ref_corrs))
+print("Test phase")
 stat, pvalue = core.corr_diff_test(
     ref_corrs.astype("float32"), np.zeros(len(ref_corrs), dtype="int32") +
         len(description_df.loc[description_df["Group"] == REFERENCE_GROUP]),
