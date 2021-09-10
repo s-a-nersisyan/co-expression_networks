@@ -93,12 +93,12 @@ output_df["Diff"] = [report_occurrence[molecule] for molecule in output_df["Mole
 output_df["Total"] = [len(molecules) - 1 for molecule in output_df["Molecule"]]
 output_df["Proportion"] = output_df["Diff"] / output_df["Total"]
 
-output_df["Pvalue"] = [1 - scipy.stats.hypergeom.cdf(
+output_df["Pvalue"] = 1 - scipy.stats.hypergeom.cdf(
     output_df["Diff"] - 1,
     initial_interaction_number, # M
     report_interaction_number, # n
     output_df["Total"] # N
-)]
+)
 
 adjusted_pvalue = np.array(output_df["Pvalue"] * len(output_df["Pvalue"]) / \
     scipy.stats.rankdata(output_df["Pvalue"]))
