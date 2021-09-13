@@ -62,8 +62,8 @@ report_df = pd.read_csv(
         "/{}_report.csv".format(CORRELATION),
         sep=","
 )
-# report_df = report_df[report_df["FDR"] < FDR_THRESHOLD]
-report_df = report_df[report_df["Pvalue"] < FDR_THRESHOLD]
+report_df = report_df[report_df["FDR"] < FDR_THRESHOLD]
+# report_df = report_df[report_df["Pvalue"] < FDR_THRESHOLD]
 
 # Report indexing
 if ORIENTED:
@@ -118,7 +118,10 @@ adjusted_pvalue = adjusted_pvalue.flatten()
 output_df["FDR"] = adjusted_pvalue
 output_df = output_df[output_df["FDR"] < FDR_THRESHOLD]
 
-output_df = output_df.sort_values(["FDR", "Pvalue"])
+output_df["NegProportion"] = 1 - output_df["Proportion"]
+output_df = output_df.sort_values(["FDR", "Pvalue", "NegProportion"])
+output_df = output_df.drop(columns=["NegProportion"])
+
 output_df.to_csv(
         OUTPUT_DIR_PATH.rstrip("/") +
         "/{}_hyper.csv".format(CORRELATION),

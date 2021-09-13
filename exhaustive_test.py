@@ -95,7 +95,6 @@ adjusted_pvalue = pvalue * len(pvalue) / \
 adjusted_pvalue[adjusted_pvalue > 1] = 1
 adjusted_pvalue = adjusted_pvalue.flatten()
 
-# indexes = np.where(adjusted_pvalue < FDR_THRESHOLD)[0]
 indexes = np.arange(len(adjusted_pvalue))
 
 ref_corrs = ref_corrs[indexes]
@@ -133,4 +132,40 @@ np.save(OUTPUT_DIR_PATH.rstrip("/") + \
 np.save(OUTPUT_DIR_PATH.rstrip("/") + \
     "/{}_report_fdr.npy".format(CORRELATION),
     adjusted_pvalue
+)
+
+indexes = np.where(adjusted_pvalue < FDR_THRESHOLD)[0]
+
+ref_corrs = ref_corrs[indexes]
+exp_corrs = exp_corrs[indexes]
+stat = stat[indexes]
+pvalue = pvalue[indexes]
+adjusted_pvalue = adjusted_pvalue[indexes]
+df_indexes = data_df.index.to_numpy()
+
+source_indexes = []
+target_indexes = []
+for ind in tqdm.tqdm(indexes):
+    s, t = core.paired_index(ind, len(df_indexes))
+    source_indexes.append(df_indexes[s])
+    target_indexes.append(df_indexes[t])
+
+source_indexes = np.array(source_indexes, dtype=np.str)
+target_indexes = np.array(target_indexes, dtype=np.str)
+
+output_df = pd.DataFrame()
+output_df["Source"] = source_indexes
+output_df["Target"] = target_indexes
+output_df["Reference"] = ref_corrs 
+output_df["Experimental"] = exp_corrs 
+output_df["Statistic"] = stat
+output_df["Pvalue"] = pvalue
+output_df["FDR"] = adjusted_pvalue
+output_df = output_df.sort_values(["FDR", "Pvalue"])
+
+output_df.to_csv(
+    OUTPUT_DIR_PATH.rstrip("/") + \
+    "/{}_report.csv".format(CORRELATION),
+    sep=",",
+    index=None
 )

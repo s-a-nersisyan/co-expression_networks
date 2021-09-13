@@ -62,8 +62,8 @@ report_df = pd.read_csv(
         "/{}_report.csv".format(CORRELATION),
         sep=","
 )
-# report_df = report_df[report_df["FDR"] < FDR_THRESHOLD]
-report_df = report_df[report_df["Pvalue"] < FDR_THRESHOLD]
+report_df = report_df[report_df["FDR"] < FDR_THRESHOLD]
+# report_df = report_df[report_df["Pvalue"] < FDR_THRESHOLD]
 
 # Report indexing
 if ORIENTED:
@@ -120,7 +120,7 @@ output_df = output_df[output_df["FDR"] < FDR_THRESHOLD]
 output_df = output_df.sort_values(["FDR", "Pvalue"])
 output_df.to_csv(
         OUTPUT_DIR_PATH.rstrip("/") +
-        "/{}_binomise.csv".format(CORRELATION),
+        "/{}_binom.csv".format(CORRELATION),
         sep=",",
         index=None
 )
