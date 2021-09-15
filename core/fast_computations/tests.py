@@ -1,10 +1,11 @@
 import numpy as np
 
 from .correlation_computations import _corr_diff_test
+from .correlation_computations import _corr_diff_test_boot
 from .correlation_computations import UNDEFINED_CORR_DIFF_TEST_VALUE
 
-LEFT_BORDER_BOUND = -1 + 1.e-6
-RIGHT_BORDER_BOUND = 1 - 1.e-6
+LEFT_BORDER_BOUND = -0.99
+RIGHT_BORDER_BOUND = 0.99
 
 
 # This function is similar to the
@@ -47,3 +48,34 @@ def corr_diff_test(
     pvalue[pvalue == UNDEFINED_CORR_DIFF_TEST_VALUE] = None
 
     return stat, pvalue
+
+def corr_diff_test_boot(
+	data,
+    source_indexes,
+    target_indexes,
+	reference_indexes,
+	experimental_indexes,
+    correlation="spearman",
+    alternative="two-sided",
+    repeats_number=1000,
+    process_num=1 
+):
+    data = np.array(data, dtype="float32")
+    
+    source_indexes = np.array(source_indexes, dtype="int32")
+    target_indexes = np.array(target_indexes, dtype="int32")
+    
+    reference_indexes = np.array(reference_indexes, dtype="int32")
+    experimental_indexes = np.array(experimental_indexes, dtype="int32")
+    
+    print("Test computations")
+    stat, pvalue = _corr_diff_test_boot(
+        first_rs, first_size,
+        second_rs, second_size,
+        correlation,
+        alternative,
+        process_num
+    )
+    
+    return stat, pvalue
+

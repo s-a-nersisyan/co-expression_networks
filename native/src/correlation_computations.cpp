@@ -11,6 +11,10 @@
 #include <tuple>
 #include <map>
 
+#include <algorithm>
+#include <random>
+#include <vector>
+
 #include "utils/utils.h"
 
 namespace py = pybind11;
@@ -21,6 +25,9 @@ using NumPyIntArray = py::array_t<int32_t, py::array::c_style>;
 
 const float UNDEFINED_CORR_VALUE = -2;
 const float UNDEFINED_CORR_DIFF_TEST_VALUE = -2;
+
+const float LEFT_CORR_BOUND = -0.99;
+const float RIGHT_CORR_BOUND = 0.99;
 
 const int REPEATS_NUMBER = 1000;
 
@@ -282,14 +289,34 @@ int corr_diff_test_unsized_thread(
 ) {
 
     for (int ind = start_ind; ind < end_ind; ++ind) {
-        if (std::abs(first_rs_ptr[ind] + second_rs_ptr[ind]) == 2) {
-            stat_ptr[ind] = UNDEFINED_CORR_DIFF_TEST_VALUE;
-            pvalue_ptr[ind] = UNDEFINED_CORR_DIFF_TEST_VALUE;
-            continue;
-        }
+		float first_rs = first_rs_ptr[ind];
+		float second_rs = second_rs_ptr[ind];
+		
+		// if (std::abs(first_rs_ptr[ind] + second_rs_ptr[ind]) == 2) {
+        //     stat_ptr[ind] = UNDEFINED_CORR_DIFF_TEST_VALUE;
+        //     pvalue_ptr[ind] = UNDEFINED_CORR_DIFF_TEST_VALUE;
+        //     continue;
+        // }
+		
+		// Bound corrs
+		if (first_rs < LEFT_CORR_BOUND) {
+			first_rs = LEFT_CORR_BOUND;
+		}
 
-        float stat = (std::atanh(first_rs_ptr[ind]) -
-                std::atanh(second_rs_ptr[ind]));    
+		if (second_rs < LEFT_CORR_BOUND) {
+			second_rs = LEFT_CORR_BOUND;
+		}
+		
+		if (first_rs > RIGHT_CORR_BOUND) {
+			first_rs = RIGHT_CORR_BOUND;
+		}
+
+		if (second_rs > RIGHT_CORR_BOUND) {
+			second_rs = RIGHT_CORR_BOUND;
+		}
+
+        float stat = (std::atanh(first_rs) -
+                std::atanh(second_rs));    
 
         // This block is a copy of 
         // core.correlation_utils.pearson_std
@@ -330,16 +357,35 @@ int corr_diff_test_sized_thread(
     const std::string &correlation,
     const std::string &alternative
 ) {
-
     for (int ind = start_ind; ind < end_ind; ++ind) {
-        if (std::abs(first_rs_ptr[ind] + second_rs_ptr[ind]) == 2) {
-            stat_ptr[ind] = UNDEFINED_CORR_DIFF_TEST_VALUE;
-            pvalue_ptr[ind] = UNDEFINED_CORR_DIFF_TEST_VALUE;
-            continue;
-        }
+  		float first_rs = first_rs_ptr[ind]; 
+  		float second_rs = second_rs_ptr[ind]; 
+		
+		// if (std::abs(first_rs_ptr[ind] + second_rs_ptr[ind]) == 2) {
+        //     stat_ptr[ind] = UNDEFINED_CORR_DIFF_TEST_VALUE;
+        //     pvalue_ptr[ind] = UNDEFINED_CORR_DIFF_TEST_VALUE;
+        //     continue;
+        // }
+		
+		// Bound corrs
+		if (first_rs < LEFT_CORR_BOUND) {
+			first_rs = LEFT_CORR_BOUND;
+		}
 
-        float stat = (std::atanh(first_rs_ptr[ind]) -
-                std::atanh(second_rs_ptr[ind]));    
+		if (second_rs < LEFT_CORR_BOUND) {
+			second_rs = LEFT_CORR_BOUND;
+		}
+		
+		if (first_rs > RIGHT_CORR_BOUND) {
+			first_rs = RIGHT_CORR_BOUND;
+		}
+
+		if (second_rs > RIGHT_CORR_BOUND) {
+			second_rs = RIGHT_CORR_BOUND;
+		}
+
+        float stat = (std::atanh(first_rs) -
+                std::atanh(second_rs));    
 
         // This block is a copy of 
         // core.correlation_utils.pearson_std
@@ -446,54 +492,6 @@ std::pair<NumPyFloatArray, NumPyFloatArray> corr_diff_test(
            NumPyFloatArray>(stat, pvalue);
 }
 
-// Score block
-
-std::map<int, float> aggregate_scores(
-	float *score_ptr,	
-    int *index_ptr,
-	int size
-) {	
-	std::map<int, float> agg_scores;
-	std::map<int, int> scores_number;
-	
-	for (int i = 0; i < size; ++i) {
-		if (!agg_scores.count(index_ptr[i])) {
-			agg_scores[index_ptr[i]] = 0;
-			scores_number[index_ptr[i]] = 0;
-		}
-
-		agg_scores[index_ptr[i]] +=
-			score_ptr[i] * score_ptr[i];
-		scores_number[index_ptr[i]] += 1;
-	}
-
-	for (int i = 0; i < size; ++i) {
-		agg_scores[index_ptr[i]] /=
-			scores_number[index_ptr[i]];
-		agg_scores[index_ptr[i]] = std::sqrt(
-			agg_scores[index_ptr[i]]
-		);	
-	}
-
-	return agg_scores;
-}
-
-std::map<int, float> aggregate_scores(
-	const NumPyFloatArray &scores,	
-    const NumPyIntArray &indexes
-) {
-    py::buffer_info scr_buf = scores.request();
-    py::buffer_info ind_buf = indexes.request();
-	
-	float *score_ptr = (float *) scr_buf.ptr;
-	int *index_ptr = (int *) ind_buf.ptr;
-    int size = ind_buf.shape[0];
-	
-	return aggregate_scores(
-		score_ptr, index_ptr, size
-	);
-}
-
 // Pipeline block
 
 int pipeline_thread(
@@ -543,7 +541,209 @@ int pipeline_thread(
 	return 0;
 }
 
-std::pair<std::map<int, float>, std::map<int, float>> pipeline(
+std::pair<NumPyFloatArray, NumPyFloatArray> corr_diff_test_boot(
+	const NumPyFloatArray &data,
+    const NumPyIntArray &source_indexes,
+    const NumPyIntArray &target_indexes,
+	const NumPyIntArray &reference_indexes,
+	const NumPyIntArray &experimental_indexes,
+	const std::string correlation,
+	const std::string alternative,
+	int repeats_number=REPEATS_NUMBER,
+    int process_num=1	
+) {
+	py::buffer_info data_buf = data.request();
+	float *data_ptr = (float *) data_buf.ptr;
+	int sample_size = data_buf.shape[1];
+
+	py::buffer_info source_ind_buf = source_indexes.request();
+	int *source_ind_ptr = (int *) source_ind_buf.ptr;
+	
+	py::buffer_info target_ind_buf = target_indexes.request();
+	int *target_ind_ptr = (int *) target_ind_buf.ptr;
+	
+	int index_size = source_ind_buf.shape[0];
+	
+	py::buffer_info ref_ind_buf = reference_indexes.request();
+	int ref_ind_size = ref_ind_buf.shape[0];
+	int *ref_ind_ptr = (int *) ref_ind_buf.ptr;
+	
+	py::buffer_info exp_ind_buf = experimental_indexes.request();
+	int exp_ind_size = exp_ind_buf.shape[0];
+	int *exp_ind_ptr = (int *) exp_ind_buf.ptr;
+
+	// Real data	
+	float *ref_corrs_ptr = new float[index_size];
+	float *exp_corrs_ptr = new float[index_size];
+
+    NumPyFloatArray stat = NumPyFloatArray(index_size);
+	float *stat_ptr = (float *) stat.request().ptr;
+	
+	NumPyFloatArray pvalue = NumPyFloatArray(index_size);
+	float *pvalue_ptr = (float *) pvalue.request().ptr;
+
+	// Bootstrapped data
+	float *boot_ref_corrs_ptr =  new float[index_size];
+	float *boot_exp_corrs_ptr = new float[index_size];
+	float *boot_stat_ptr = new float[index_size];
+	 
+	int *boot_ref_ind_ptr = new int[ref_ind_size];
+	int *boot_exp_ind_ptr = new int[exp_ind_size];
+
+	// Bootstrap indexes initialization
+	std::vector<int> indexes(sample_size);
+	for (int i = 0; i < sample_size; ++i) {
+		indexes[i] = i;
+	}
+
+	// Random generator initialization
+    std::random_device random_dev;
+	std::mt19937 random_gen(random_dev());
+
+	// Bootstrap pvalue computations	
+	float *rcp, *ecp, *sp;
+	int *rip, *eip;
+	for (int r = 0; r < repeats_number + 1; ++r) {
+		if (r == 0) {
+			rcp = ref_corrs_ptr;
+			ecp = exp_corrs_ptr;
+			sp  = stat_ptr;
+
+			rip = ref_ind_ptr;
+			eip = exp_ind_ptr;
+		} else {
+			std::shuffle(indexes.begin(), indexes.end(), random_gen);
+			for (int i = 0; i < ref_ind_size; ++i) {
+				boot_ref_ind_ptr[i] = indexes[i];
+			}
+			for (int i = 0; i < exp_ind_size; ++i) {
+				boot_exp_ind_ptr[i] = indexes[ref_ind_size + i];
+			}
+
+			rcp = boot_ref_corrs_ptr;
+			ecp = boot_exp_corrs_ptr;
+			sp  = boot_stat_ptr;
+			
+			rip = boot_ref_ind_ptr;
+			eip = boot_exp_ind_ptr;
+		}
+		
+		std::queue<std::thread> threads;
+		int batch_size = index_size / process_num;
+		for (int i = 0; i < process_num; ++i) {
+			int left_border = i * batch_size;
+			int right_border = (i + 1) * batch_size;
+			if (i == process_num - 1) {
+				right_border = index_size;
+			}
+			
+			std::thread thr(pipeline_thread,
+				data_ptr,
+				source_ind_ptr,
+				target_ind_ptr,
+				left_border, right_border,
+				rip, eip,
+				ref_ind_size,
+				exp_ind_size,
+				rcp, ecp, sp,
+				correlation,
+				alternative
+			);
+			
+			threads.push(move(thr));
+		}
+
+		while (!threads.empty()) {
+			threads.front().join();
+			threads.pop();
+		}
+		
+		if (r > 0) {
+			for (int i = 0; i < index_size; ++i) {
+				if ((alternative == "two-sided") &&
+						(std::abs(stat_ptr[i]) <= std::abs(boot_stat_ptr[i]))) {
+					pvalue_ptr[i] += 1;
+				}
+
+				if ((alternative == "less") &&
+						(stat_ptr[i] <= boot_stat_ptr[i])) {
+					pvalue_ptr[i] += 1;
+				}
+				
+				if ((alternative == "greater") &&
+						(stat_ptr[i] >= boot_stat_ptr[i])) {
+					pvalue_ptr[i] += 1;
+				}
+			}
+		}
+	}
+	
+	for (int i = 0; i < index_size; ++i) {
+		pvalue_ptr[i] /= repeats_number;
+	}
+
+	delete[] ref_corrs_ptr;
+	delete[] exp_corrs_ptr;
+	
+	delete[] boot_ref_corrs_ptr;
+	delete[] boot_exp_corrs_ptr;
+	delete[] boot_stat_ptr;
+	 
+	delete[] boot_ref_ind_ptr;
+	delete[] boot_exp_ind_ptr;
+	
+	return std::pair<NumPyFloatArray, NumPyFloatArray>(stat, pvalue);
+}
+
+// Score block
+
+std::map<int, float> aggregate_scores(
+	float *score_ptr,	
+    int *index_ptr,
+	int size
+) {	
+	std::map<int, float> agg_scores;
+	std::map<int, int> scores_number;
+	
+	for (int i = 0; i < size; ++i) {
+		if (!agg_scores.count(index_ptr[i])) {
+			agg_scores[index_ptr[i]] = 0;
+			scores_number[index_ptr[i]] = 0;
+		}
+
+		agg_scores[index_ptr[i]] +=
+			score_ptr[i] * score_ptr[i];
+		scores_number[index_ptr[i]] += 1;
+	}
+
+	for (int i = 0; i < size; ++i) {
+		agg_scores[index_ptr[i]] /=
+			scores_number[index_ptr[i]];
+		agg_scores[index_ptr[i]] = std::sqrt(
+			agg_scores[index_ptr[i]]
+		);	
+	}
+
+	return agg_scores;
+}
+
+std::map<int, float> aggregate_scores(
+	const NumPyFloatArray &scores,	
+    const NumPyIntArray &indexes
+) {
+    py::buffer_info scr_buf = scores.request();
+    py::buffer_info ind_buf = indexes.request();
+	
+	float *score_ptr = (float *) scr_buf.ptr;
+	int *index_ptr = (int *) ind_buf.ptr;
+    int size = ind_buf.shape[0];
+	
+	return aggregate_scores(
+		score_ptr, index_ptr, size
+	);
+}
+
+std::pair<std::map<int, float>, std::map<int, float>> score_pipeline(
 	const NumPyFloatArray &data,
     const NumPyIntArray &source_indexes,
     const NumPyIntArray &target_indexes,
@@ -691,6 +891,7 @@ PYBIND11_MODULE(correlation_computations, m) {
     m.def("_pearsonr_unindexed", &pearsonr_unindexed);
     m.attr("UNDEFINED_CORR_VALUE") = py::float_(UNDEFINED_CORR_VALUE);
     m.def("_corr_diff_test", &corr_diff_test);
+	m.def("_corr_diff_test_boot", &corr_diff_test_boot);
     m.attr("UNDEFINED_CORR_DIFF_TEST_VALUE") =
         py::float_(UNDEFINED_CORR_DIFF_TEST_VALUE);
 }
