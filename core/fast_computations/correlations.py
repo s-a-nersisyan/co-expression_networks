@@ -24,8 +24,7 @@ def spearmanr(
     source_indexes=None, target_indexes=None,
     process_num=1,
     numerical_index=False
-):
-   
+): 
     data = df.to_numpy(copy=True).astype("float32")
 
     # print("Correlation computations")
@@ -35,7 +34,6 @@ def spearmanr(
                 df.index.to_list(),
                 source_indexes, target_indexes
             )
-         
         else:
             source_num_indexes = source_indexes
             target_num_indexes = target_indexes
@@ -61,7 +59,6 @@ def spearmanr(
             target_num_indexes,
             process_num
         )
-    
     else:
         data = rankdata(
                 data,
@@ -73,7 +70,6 @@ def spearmanr(
             process_num
         )
 
-
     corrs[corrs == UNDEFINED_CORR_VALUE] = None
     return corrs
 
@@ -82,8 +78,7 @@ def pearsonr(
     source_indexes=None, target_indexes=None,
     process_num=1,
     numerical_index=False
-):  
-      
+):     
     data = df.to_numpy(copy=True).astype("float32")
     
     # print("Correlation computations")
@@ -97,7 +92,7 @@ def pearsonr(
         else:
             source_num_indexes = source_indexes
             target_num_indexes = target_indexes
-     
+         
         source_num_indexes = np.array(
             source_num_indexes
         ).astype("int32")

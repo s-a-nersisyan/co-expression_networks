@@ -6,7 +6,7 @@
 from .fast_computations.correlations import \
     pearsonr, spearmanr
 from .fast_computations.tests import \
-    corr_diff_test,
+    corr_diff_test, \
     corr_diff_test_boot
 
 # Fast utils
