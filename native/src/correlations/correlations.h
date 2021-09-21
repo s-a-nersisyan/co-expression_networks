@@ -16,7 +16,8 @@ int spearmanr(
     int *source_ind_ptr,
     int *target_ind_ptr,
     float *corrs_ptr,
-    int start_ind, int end_ind,
+    int start_ind,
+	int end_ind,
 	int index_size=-1,
 	int *sample_ind_ptr=nullptr,
 	int sample_ind_size=-1
@@ -28,7 +29,8 @@ int pearsonr(
     int *source_ind_ptr,
     int *target_ind_ptr,
     float *corrs_ptr,
-    int start_ind, int end_ind,
+    int start_ind,
+	int end_ind,
 	int index_size=-1,
 	int *sample_ind_ptr=nullptr,
 	int sample_ind_size=-1
