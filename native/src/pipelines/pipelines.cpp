@@ -24,7 +24,7 @@ int ztest_pipeline(
 	const std::string alternative
 ) {
 	if (correlation == SPEARMAN) {
-		spearmanr(
+		pearsonr(
 			data_ptr,
 			sample_size,
 			source_ind_ptr,
@@ -37,7 +37,7 @@ int ztest_pipeline(
 			ref_ind_size
 		);
 		
-		spearmanr(
+		pearsonr(
 			data_ptr,
 			sample_size,
 			source_ind_ptr,
