@@ -131,26 +131,6 @@ def spearmanr_conf_interval(confidence, rs, size):
     return (spearmanr_ppf((1 - confidence) / 2, rs, size),
             spearmanr_ppf((1 + confidence) / 2, rs, size))
            
-    
-def spearmanr_thr_proba(thr, rs, size):
-    """Computes probability of spearman correlation being less then threshold
-    
-    Parameters
-    ----------
-    thr: numerical value or numpy.array
-    rs: numerical value or numpy.array
-        Sperman correlation(s).
-    size: numerical value or numpy.array
-        Size(s) of sample(s) that were used to compute
-        "rs".
-    Returns
-    -------
-    numerical value or numpy.array respectively to "confidence" and "rs"
-    """
-    ss = spearmanr_std(rs, size)
-    return scipy.stats.norm.cdf((np.arctanh(thr) - np.arctanh(rs)) / ss)
-
-
 # Pearsonr block
 def pearsonr_std(rs, size):
     """Computes standard deviation of pearson correlation

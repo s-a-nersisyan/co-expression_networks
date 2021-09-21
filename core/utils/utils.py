@@ -1,12 +1,9 @@
 import numpy as np
 import math
 
-
 BOOTSTRAP_REPEATS = 10**3
 
 
-# This function is a copy of the one placed in
-# fast_computations/correlations.py
 def get_num_ind(indexes, *args):
     index_hash = {
         ind: num for num, ind in enumerate(indexes)
@@ -33,7 +30,7 @@ def bootstrap_sample(
     *args, statistic=None,
     bootstrap_repeats=BOOTSTRAP_REPEATS
 ):
-    for i in range(BOOTSTRAP_REPEATS):
+    for i in range(bootstrap_repeats):
         indexes = np.random.choice(
             np.arange(len(args[0])),
             len(args[0]),

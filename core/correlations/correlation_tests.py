@@ -10,7 +10,7 @@ import scipy.stats
 from .correlation_utils import \
     pearsonr_mean, pearsonr_std
 
-def corr_diff_test(
+def ztest(
     first_rs, first_size,
     second_rs, second_size,
     correlation="spearman",

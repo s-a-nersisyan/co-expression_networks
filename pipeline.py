@@ -33,6 +33,7 @@ EXPERIMENTAL_GROUP = config["experimnetal_group"]
 
 CORRELATION = config["correlation"]
 ALTERNATIVE = config["alternative"]
+REPEATS_NUMBER = config["repeats_number"]
 PROCESS_NUMBER = config["process_number"]
 
 FDR_THRESHOLD = config["fdr_treshold"]
@@ -62,43 +63,26 @@ interaction_df = interaction_df[interaction_df["Target"].isin(data_molecules)]
 source_indexes = interaction_df["Source"]
 target_indexes = interaction_df["Target"]
 
-print("Reference correlations")
-ref_corrs = correlation(
-    data_df[
-        description_df.loc[
-            description_df["Group"] == REFERENCE_GROUP,
-            "Sample"
-        ].to_list()
-    ],
+reference_indexes = description_df.loc[
+    description_df["Group"] == REFERENCE_GROUP,
+    "Sample"
+].to_list()
+experimental_indexes = description_df.loc[
+    description_df["Group"] == EXPERIMENTAL_GROUP,
+    "Sample"
+].to_list()
+
+print("Pipeline")
+ref_corrs, exp_corrs, stat, pvalue, boot_pvalue = \
+core.extern.ztest_pipeline(
+    data_df,
+    reference_indexes,
+    experimental_indexes,
     source_indexes,
     target_indexes,
-    process_num=PROCESS_NUMBER
-    # numerical_index=numerical_flag
-)
-
-print("Experimental correlations")
-exp_corrs = correlation(
-    data_df[
-        description_df.loc[
-            description_df["Group"] == EXPERIMENTAL_GROUP,
-            "Sample"
-        ].to_list()
-    ],
-    source_indexes,
-    target_indexes,
-    process_num=PROCESS_NUMBER
-    # numerical_index=numerical_flag
-)
-
-# The hypothesis check
-print("Test phase")
-stat, pvalue = core.extern.ztest(
-    ref_corrs.astype("float32"), np.zeros(len(ref_corrs), dtype="int32") +
-        len(description_df.loc[description_df["Group"] == REFERENCE_GROUP]),
-    exp_corrs.astype("float32"), np.zeros(len(exp_corrs), dtype="int32") +
-        len(description_df.loc[description_df["Group"] == EXPERIMENTAL_GROUP]),
     correlation=CORRELATION,
     alternative=ALTERNATIVE,
+    repeats_num=REPEATS_NUMBER,
     process_num=PROCESS_NUMBER
 )
 
@@ -114,12 +98,13 @@ output_df["Reference"] = ref_corrs
 output_df["Experimental"] = exp_corrs 
 output_df["Statistic"] = stat
 output_df["Pvalue"] = pvalue
+output_df["Bootpv"] = boot_pvalue
 output_df["FDR"] = adjusted_pvalue
 output_df = output_df.sort_values(["FDR", "Pvalue"])
 
 output_df.to_csv(
     OUTPUT_DIR_PATH.rstrip("/") + \
-    "/{}_report.csv".format(CORRELATION),
+    "/{}_pipeline.csv".format(CORRELATION),
     sep=",",
     index=None
 )
