@@ -73,7 +73,6 @@ ref_corrs = correlation(
     source_indexes,
     target_indexes,
     process_num=PROCESS_NUMBER
-    # numerical_index=numerical_flag
 )
 
 print("Experimental correlations")
@@ -87,7 +86,6 @@ exp_corrs = correlation(
     source_indexes,
     target_indexes,
     process_num=PROCESS_NUMBER
-    # numerical_index=numerical_flag
 )
 
 # The hypothesis check

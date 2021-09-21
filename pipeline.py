@@ -7,6 +7,8 @@ import time
 import tqdm
 import json
 
+import time
+
 # Import python package
 import core.extern
 
@@ -58,7 +60,7 @@ interaction_df = pd.read_csv(INTERACTION_PATH, sep=",")
 data_molecules = set(data_df.index.to_list())
 interaction_df = interaction_df[interaction_df["Source"].isin(data_molecules)]
 interaction_df = interaction_df[interaction_df["Target"].isin(data_molecules)]
-# interaction_df = interaction_df.iloc[:1]
+# interaction_df = interaction_df.iloc[:170000]
 
 source_indexes = interaction_df["Source"]
 target_indexes = interaction_df["Target"]
@@ -73,6 +75,7 @@ experimental_indexes = description_df.loc[
 ].to_list()
 
 print("Pipeline")
+start = time.time()
 ref_corrs, exp_corrs, stat, pvalue, boot_pvalue = \
 core.extern.ztest_pipeline(
     data_df,
@@ -85,6 +88,7 @@ core.extern.ztest_pipeline(
     repeats_num=REPEATS_NUMBER,
     process_num=PROCESS_NUMBER
 )
+print(time.time() - start)
 
 adjusted_pvalue = pvalue * len(pvalue) / \
     scipy.stats.rankdata(pvalue)

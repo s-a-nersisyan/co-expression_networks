@@ -13,7 +13,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Import python package
-import core
+import core.extern
+import core.utils
 
 CORR_LEFT_BOUND = -1. + 1e-6
 CORR_RIGHT_BOUND = 1. - 1e-6
@@ -70,9 +71,9 @@ if REDUCED:
     )
 
 if (CORRELATION == "spearman"):
-    correlation = core.spearmanr
+    correlation = core.extern.spearmanr
 else:
-    correlation = core.pearsonr
+    correlation = core.extern.pearsonr
 
 interaction_df = None
 source_indexes = None
@@ -109,7 +110,7 @@ exp_corrs = correlation(
 print("Graph calculations")
 if REDUCED:
     significant_molecules = analysis_df["Molecule"]
-    significant_indexes = core.get_num_ind(
+    significant_indexes = core.utils.get_num_ind(
         data_df.index.to_list(),
         significant_molecules
     )
@@ -117,19 +118,19 @@ if REDUCED:
 else:
     significant_indexes = np.arange(len(data_df))
 
-ref_corrs = core.paired_reshape(
+ref_corrs = core.extern.quadrate(
     ref_corrs,
     significant_indexes,
     len(data_df)
 ) 
 
-exp_corrs = core.paired_reshape(
+exp_corrs = core.extern.quadrate(
     exp_corrs,
     significant_indexes,
     len(data_df)
 )
 
-stat, pvalue = core.corr_diff_test(
+stat, pvalue = core.extern.ztest(
     ref_corrs.astype("float32"), np.zeros(len(ref_corrs), dtype="int32") +
         len(description_df.loc[description_df["Group"] == REFERENCE_GROUP]),
     exp_corrs.astype("float32"), np.zeros(len(exp_corrs), dtype="int32") +
@@ -139,7 +140,7 @@ stat, pvalue = core.corr_diff_test(
     process_num=PROCESS_NUMBER
 )
 
-cluster_data = core.paired_reshape(
+cluster_data = core.extern.quadrate(
     stat,
     significant_indexes,
     len(data_df)

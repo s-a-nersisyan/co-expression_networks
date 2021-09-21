@@ -8,7 +8,7 @@ import tqdm
 import json
 
 # Import python package
-import core
+import core.extern
 
 # Arg parser
 import argparse
@@ -94,7 +94,7 @@ molecule_num = int((1 + np.sqrt(1 + 8 * len(stat))) / 2)
 # Calculate mean values of a molecule
 print("Mean phase")
 mean = np.zeros(molecule_num)
-mean = np.mean(core.paired_reshape(
+mean = np.mean(core.extern.quadrate(
     stat, np.arange(molecule_num),
     molecule_num
 ), axis = 1)
@@ -131,8 +131,8 @@ output_df["FDR"] = adjusted_pvalue
 
 output_df = output_df.sort_values(["FDR", "Pvalue"])
 output_df.to_csv(
-        OUTPUT_DIR_PATH.rstrip("/") +
-        "/{}_aggregation.csv".format(CORRELATION),
-        sep=",",
-        index=None
+    OUTPUT_DIR_PATH.rstrip("/") +
+    "/{}_aggregation.csv".format(CORRELATION),
+    sep=",",
+    index=None
 )

@@ -8,7 +8,7 @@ import tqdm
 import json
 
 # Import python package
-import core
+import core.extern
 
 # Arg parser
 import argparse
@@ -43,11 +43,14 @@ data_df = pd.read_csv(DATA_PATH, sep=",", index_col=0)
 description_df = pd.read_csv(DESCRIPTION_PATH, sep=",")
 
 if (CORRELATION == "spearman"):
-    correlation = core.spearmanr
-else:
-    correlation = core.pearsonr
+    correlation = core.extern.spearmanr
+elif (CORRELATION == "pearson"):
+    correlation = core.extern.pearsonr
+elif (CORRELATION == "spearman_test"):
+    CORRELATION = "spearman"
+    correlation = core.extern.spearmanr_test
 
-interaction_df = None
+interaction_df=None
 source_indexes=None
 target_indexes=None
 
@@ -62,7 +65,6 @@ ref_corrs = correlation(
     source_indexes,
     target_indexes,
     process_num=PROCESS_NUMBER
-    # numerical_index=numerical_flag
 )
 
 print("Experimental correlations")
@@ -76,11 +78,10 @@ exp_corrs = correlation(
     source_indexes,
     target_indexes,
     process_num=PROCESS_NUMBER
-    # numerical_index=numerical_flag
 )
 
 print("Test phase")
-stat, pvalue = core.corr_diff_test(
+stat, pvalue = core.extern.ztest(
     ref_corrs.astype("float32"), np.zeros(len(ref_corrs), dtype="int32") +
         len(description_df.loc[description_df["Group"] == REFERENCE_GROUP]),
     exp_corrs.astype("float32"), np.zeros(len(exp_corrs), dtype="int32") +
@@ -103,28 +104,11 @@ stat = stat[indexes]
 pvalue = pvalue[indexes]
 adjusted_pvalue = adjusted_pvalue[indexes]
 df_indexes = data_df.index.to_numpy()
-# source_indexes = []
-# target_indexes = []
-# for ind in tqdm.tqdm(indexes):
-#     s, t = core.paired_index(ind, len(df_indexes))
-#     source_indexes.append(df_indexes[s])
-#     target_indexes.append(df_indexes[t])
-# 
-# source_indexes = np.array(source_indexes, dtype=np.str)
-# target_indexes = np.array(source_indexes, dtype=np.str)
 
 np.save(OUTPUT_DIR_PATH.rstrip("/") + \
     "/{}_report_stat.npy".format(CORRELATION),
     stat
 )
-# np.save(OUTPUT_DIR_PATH.rstrip("/") + \
-#     "/{}_report_refr.npy".format(CORRELATION),
-#     ref_corrs
-# )
-# np.save(OUTPUT_DIR_PATH.rstrip("/") + \
-#     "/{}_report_expr.npy".format(CORRELATION),
-#     exp_corrs
-# )
 np.save(OUTPUT_DIR_PATH.rstrip("/") + \
     "/{}_report_pvalue.npy".format(CORRELATION),
     pvalue
@@ -146,7 +130,7 @@ df_indexes = data_df.index.to_numpy()
 source_indexes = []
 target_indexes = []
 for ind in tqdm.tqdm(indexes):
-    s, t = core.paired_index(ind, len(df_indexes))
+    s, t = core.extern.paired_index(ind, len(df_indexes))
     source_indexes.append(df_indexes[s])
     target_indexes.append(df_indexes[t])
 

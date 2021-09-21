@@ -8,7 +8,7 @@ import tqdm
 import json
 
 # Import python package
-import core
+import core.extern
 
 # Arg parser
 import argparse
@@ -67,7 +67,7 @@ report_fdr = report_fdr[indexes]
 source_indexes = []
 target_indexes = []
 for ind in tqdm.tqdm(indexes):
-    s, t = core.paired_index(ind, len(molecules))
+    s, t = core.extern.paired_index(ind, len(molecules))
     source_indexes.append(molecules[s])
     target_indexes.append(molecules[t])
 source_indexes = np.array(source_indexes, dtype=np.str)

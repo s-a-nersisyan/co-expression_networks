@@ -13,7 +13,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Import python package
-import core
+import core.extern
+import core.utils
 
 # Arg parser
 import argparse
@@ -70,9 +71,9 @@ analysis_df = pd.read_csv(
 # End of Test mode
 
 if (CORRELATION == "spearman"):
-    correlation = core.spearmanr
+    correlation = core.extern.spearmanr
 else:
-    correlation = core.pearsonr
+    correlation = core.extern.pearsonr
 
 interaction_df = None
 interaction_df = pd.read_csv(INTERACTION_PATH, sep=",")
@@ -117,13 +118,13 @@ exp_corrs = correlation(
 
 print("Graph calculations")
 significant_molecules = analysis_df["Molecule"]
-significant_indexes = core.get_num_ind(
+significant_indexes = core.utils.get_num_ind(
     data_df.index.to_list(),
     significant_molecules
 )
 significant_indexes = np.array(significant_indexes)
 
-stat, pvalue = core.corr_diff_test(
+stat, pvalue = core.extern.ztest(
     ref_corrs.astype("float32"), np.zeros(len(ref_corrs), dtype="int32") +
         len(description_df.loc[description_df["Group"] == REFERENCE_GROUP]),
     exp_corrs.astype("float32"), np.zeros(len(exp_corrs), dtype="int32") +
@@ -169,11 +170,6 @@ for first, second in itertools.combinations(significant_molecules, 2):
     for third in intersection:
         first_corr_ind = corr_numeration[(first, third)]
         second_corr_ind = corr_numeration[(second, third)]
-        
-        # first_stat = np.arctanh(ref_corrs[first_corr_ind]) - \
-        #         np.arctanh(exp_corrs[first_corr_ind])
-        # second_stat = np.arctanh(ref_corrs[second_corr_ind]) - \
-        #         np.arctanh(exp_corrs[second_corr_ind])
         
         first_stat = stat[first_corr_ind]
         second_stat = stat[second_corr_ind]

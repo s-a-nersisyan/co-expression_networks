@@ -8,7 +8,7 @@ import tqdm
 import json
 
 # Import python package
-import core
+import core.extern
 
 # Arg parser
 import argparse

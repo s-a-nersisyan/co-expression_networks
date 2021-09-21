@@ -8,7 +8,7 @@ import tqdm
 import json
 
 # Import python package
-import core
+import core.extern
 
 # Arg parser
 import argparse
@@ -52,9 +52,6 @@ def get_occurrence(array):
 
 
 # Main part
-
-# TODO: if interaction err was rased
-# the following string is superfluous 
 data_df = pd.read_csv(DATA_PATH, sep=",", index_col=0)
 
 report_df = pd.read_csv(
@@ -80,13 +77,10 @@ for index in report_occurrence:
 # Description indexing
 interaction_df = pd.read_csv(INTERACTION_PATH, sep=",")
 
-# TODO: raise error if a "Source", "Target" interaction pair
-# is not found in data molecules
 data_molecules = set(data_df.index.to_list())
 interaction_df = interaction_df[interaction_df["Source"].isin(data_molecules)]
 interaction_df = interaction_df[interaction_df["Target"].isin(data_molecules)]
 
-# TODO: copies should be removed
 if ORIENTED:
     initial_occurrence = get_occurrence(list(interaction_df["Source"]))
 else:
@@ -123,8 +117,8 @@ output_df = output_df.sort_values(["FDR", "Pvalue", "NegProportion"])
 output_df = output_df.drop(columns=["NegProportion"])
 
 output_df.to_csv(
-        OUTPUT_DIR_PATH.rstrip("/") +
-        "/{}_hyper.csv".format(CORRELATION),
-        sep=",",
-        index=None
+    OUTPUT_DIR_PATH.rstrip("/") +
+    "/{}_hyper.csv".format(CORRELATION),
+    sep=",",
+    index=None
 )
