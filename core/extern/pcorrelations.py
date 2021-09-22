@@ -1,10 +1,47 @@
 import numpy as np
 from scipy.stats import rankdata
+from scipy.stats import t
+from scipy.stats import norm
 
 from .correlations import UNDEFINED_CORR_VALUE
 from .correlations import \
     _correlation_indexed, \
     _correlation_exhaustive
+
+TWO_SIDED = "two-sided"
+LESS = "less"
+GREATER = "greater"
+
+SPEARMAN = "spearman"
+PEARSON = "pearson"
+
+def correlation_test(
+    corrs,
+    size,
+    correlation=SPEARMAN,
+    alternative=TWO_SIDED
+):
+    tcorrs = np.arctanh(corrs)
+    if correlation == SPEARMAN:
+        tcorrs = tcorrs * np.sqrt((size - 2) / (1 - tcorrs**2))
+
+        if alternative == TWO_SIDED:
+            pvalues = 2 * t.cdf(-np.abs(tcorrs), df=size - 2)
+        elif alternative == LESS: 
+            pvalues = t.cdf(tcorrs, df=size - 2)
+        elif alternative == GREATER:
+            pvalues = 1 - t.cdf(tcorrs, df=size - 2)
+    elif correlation == PEARSON:
+        tcorrs = tcorrs * np.sqrt(size - 2)
+
+        if alternative == TWO_SIDED:
+            pvalues = 2 * norm.cdf(-np.abs(tcorrs), df=size - 2)
+        elif alternative == LESS: 
+            pvalues = norm.cdf(tcorrs, df=size - 2)
+        elif alternative == GREATER:
+            pvalues = 1 - norm.cdf(tcorrs, df=size - 2)
+
+    return pv
 
 def get_num_ind(indexes, *args):
     index_hash = {
@@ -24,7 +61,8 @@ def spearmanr(
     source_indexes=None,
     target_indexes=None,
     process_num=1,
-    numerical_index=False
+    numerical_index=False,
+    alternative=None
 ): 
     data = df.to_numpy(copy=True).astype("float32")
 
@@ -67,6 +105,17 @@ def spearmanr(
         )
 
     corrs[corrs == UNDEFINED_CORR_VALUE] = None
+    
+    if alternative:
+        pvalues = correlation_test(
+            corrs,
+            data.shape[1],
+            correlation=SPEARMAN,
+            alternative=alternative
+        )
+
+        return corrs, pvalues
+    
     return corrs
 
 def spearmanr_test(
@@ -127,6 +176,17 @@ def spearmanr_test(
         )
 
     corrs[corrs == UNDEFINED_CORR_VALUE] = None
+
+    if alternative:
+        pvalues = correlation_test(
+            corrs,
+            data.shape[1],
+            correlation=SPEARMAN,
+            alternative=alternative
+        )
+
+        return corrs, pvalues
+    
     return corrs
 
 def pearsonr(
@@ -171,4 +231,15 @@ def pearsonr(
         )
 
     corrs[corrs == UNDEFINED_CORR_VALUE] = None
+
+    if alternative:
+        pvalues = correlation_test(
+            corrs,
+            data.shape[1],
+            correlation=PEARSON,
+            alternative=alternative
+        )
+
+        return corrs, pvalues
+    
     return corrs

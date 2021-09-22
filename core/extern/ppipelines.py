@@ -4,6 +4,8 @@ from .pipelines import \
     _ztest_pipeline_indexed, \
     _ztest_pipeline_exhaustive
 
+from .ppcorrelations import \
+    correlation_test \
 
 def get_num_ind(indexes, *args):
     index_hash = {
@@ -28,7 +30,8 @@ def ztest_pipeline(
     alternative="two-sided",
     repeats_num=1000,
     process_num=1,
-    numerical_index=False
+    numerical_index=False,
+    correlation_alternative=None
 ):
     data = df.to_numpy(copy=True).astype("float32")
 
@@ -110,5 +113,24 @@ def ztest_pipeline(
                 repeats_num,
                 process_num
             ) 
+    
+    if correlation_alternative:
+        ref_pvalues = correlation_test(
+            ref_corrs,
+            len(ref_num_indexes),
+            correlation=correlation,
+            alternative=correlation_alternative
+        )
 
-    return ref_corrs, exp_corrs, stat, pvalue, bootstrap_pvalue 
+        exp_pvalues = correlation_test(
+            exp_corrs,
+            len(exp_num_indexes),
+            correlation=correlation,
+            alternative=correlation_alternative
+        )
+
+        return ref_corrs, ref_pvalues, exp_corrs, \
+                exp_pvalues, stat, pvalue, bootstrap_pvalue
+
+    return ref_corrs, exp_corrs, \
+            stat, pvalue, bootstrap_pvalue 
