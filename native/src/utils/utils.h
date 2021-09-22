@@ -16,13 +16,13 @@ std::vector<int> unary_vector(int index, int base);
 int range(int *arr, int size);
 
 int rank_data(
-	float *data_ptr,
-	float *rank_ptr,
-	int sample_size,
-	int index_size,
-	int *sample_ind_ptr=nullptr,
-	int sample_ind_size=-1,
-	int process_num=1
+    float *data_ptr,
+    float *rank_ptr,
+    int sample_size,
+    int index_size,
+    int *sample_ind_ptr=nullptr,
+    int sample_ind_size=-1,
+    int process_num=1
 );
 
 #endif

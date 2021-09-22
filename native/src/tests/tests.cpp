@@ -23,25 +23,25 @@ int ztest_unsized(
     const std::string alternative
 ) {
     for (int ind = start_ind; ind < end_ind; ++ind) {
-		float first_rs = first_rs_ptr[ind];
-		float second_rs = second_rs_ptr[ind];
-		
-		// Bound corrs
-		if (first_rs < LEFT_CORR_BOUND) {
-			first_rs = LEFT_CORR_BOUND;
-		}
+        float first_rs = first_rs_ptr[ind];
+        float second_rs = second_rs_ptr[ind];
+        
+        // Bound corrs
+        if (first_rs < LEFT_CORR_BOUND) {
+            first_rs = LEFT_CORR_BOUND;
+        }
 
-		if (second_rs < LEFT_CORR_BOUND) {
-			second_rs = LEFT_CORR_BOUND;
-		}
-		
-		if (first_rs > RIGHT_CORR_BOUND) {
-			first_rs = RIGHT_CORR_BOUND;
-		}
+        if (second_rs < LEFT_CORR_BOUND) {
+            second_rs = LEFT_CORR_BOUND;
+        }
+        
+        if (first_rs > RIGHT_CORR_BOUND) {
+            first_rs = RIGHT_CORR_BOUND;
+        }
 
-		if (second_rs > RIGHT_CORR_BOUND) {
-			second_rs = RIGHT_CORR_BOUND;
-		}
+        if (second_rs > RIGHT_CORR_BOUND) {
+            second_rs = RIGHT_CORR_BOUND;
+        }
 
         float stat = (std::atanh(first_rs) -
                 std::atanh(second_rs));    
@@ -57,19 +57,19 @@ int ztest_unsized(
 
         float std = std::sqrt(first_ss * first_ss +
                 second_ss * second_ss);    
-    	
-		if (pvalue_ptr != nullptr) {
-			float pvalue = UNDEFINED_CORR_DIFF_TEST_VALUE;
-			if (alternative == LESS) {
-				pvalue = norm_cdf(stat / std);    
-			} else if (alternative == GREATER) {
-				pvalue = 1 - norm_cdf(stat / std);
-			} else if (alternative == TWO_SIDED) {
-				pvalue = 2 * norm_cdf(-std::abs(stat) / std);            
-			}
-			
-        	pvalue_ptr[ind] = pvalue;
-		}
+        
+        if (pvalue_ptr != nullptr) {
+            float pvalue = UNDEFINED_CORR_DIFF_TEST_VALUE;
+            if (alternative == LESS) {
+                pvalue = norm_cdf(stat / std);    
+            } else if (alternative == GREATER) {
+                pvalue = 1 - norm_cdf(stat / std);
+            } else if (alternative == TWO_SIDED) {
+                pvalue = 2 * norm_cdf(-std::abs(stat) / std);            
+            }
+            
+            pvalue_ptr[ind] = pvalue;
+        }
    
         stat_ptr[ind] = stat;
     }
@@ -86,25 +86,25 @@ int ztest_sized(
     const std::string alternative
 ) {
     for (int ind = start_ind; ind < end_ind; ++ind) {
-  		float first_rs = first_rs_ptr[ind]; 
-  		float second_rs = second_rs_ptr[ind]; 
-		
-		// Bound corrs
-		if (first_rs < LEFT_CORR_BOUND) {
-			first_rs = LEFT_CORR_BOUND;
-		}
+          float first_rs = first_rs_ptr[ind]; 
+          float second_rs = second_rs_ptr[ind]; 
+        
+        // Bound corrs
+        if (first_rs < LEFT_CORR_BOUND) {
+            first_rs = LEFT_CORR_BOUND;
+        }
 
-		if (second_rs < LEFT_CORR_BOUND) {
-			second_rs = LEFT_CORR_BOUND;
-		}
-		
-		if (first_rs > RIGHT_CORR_BOUND) {
-			first_rs = RIGHT_CORR_BOUND;
-		}
+        if (second_rs < LEFT_CORR_BOUND) {
+            second_rs = LEFT_CORR_BOUND;
+        }
+        
+        if (first_rs > RIGHT_CORR_BOUND) {
+            first_rs = RIGHT_CORR_BOUND;
+        }
 
-		if (second_rs > RIGHT_CORR_BOUND) {
-			second_rs = RIGHT_CORR_BOUND;
-		}
+        if (second_rs > RIGHT_CORR_BOUND) {
+            second_rs = RIGHT_CORR_BOUND;
+        }
 
         float stat = (std::atanh(first_rs) -
                 std::atanh(second_rs));    
@@ -120,19 +120,19 @@ int ztest_sized(
 
         float std = std::sqrt(first_ss * first_ss +
                 second_ss * second_ss);    
-       	
-		if (pvalue_ptr != nullptr) {
-			float pvalue = UNDEFINED_CORR_DIFF_TEST_VALUE;
-			if (alternative == LESS) {
-				pvalue = norm_cdf(stat / std);    
-			} else if (alternative == GREATER) {
-				pvalue = 1 - norm_cdf(stat / std);
-			} else if (alternative == TWO_SIDED) {
-				pvalue = 2 * norm_cdf(-std::abs(stat) / std);            
-			}
-			
-        	pvalue_ptr[ind] = pvalue;
-		}
+           
+        if (pvalue_ptr != nullptr) {
+            float pvalue = UNDEFINED_CORR_DIFF_TEST_VALUE;
+            if (alternative == LESS) {
+                pvalue = norm_cdf(stat / std);    
+            } else if (alternative == GREATER) {
+                pvalue = 1 - norm_cdf(stat / std);
+            } else if (alternative == TWO_SIDED) {
+                pvalue = 2 * norm_cdf(-std::abs(stat) / std);            
+            }
+            
+            pvalue_ptr[ind] = pvalue;
+        }
 
         stat_ptr[ind] = stat;
     }
