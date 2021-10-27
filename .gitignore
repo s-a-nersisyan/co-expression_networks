@@ -130,6 +130,7 @@ dmypy.json
 
 # Test data dir
 data/
+synthetic/
 
 # Archieve dir
 archive*/
