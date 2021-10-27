@@ -3,7 +3,8 @@ from .putils import \
     paired_index, \
     unary_array, \
     unary_matrix, \
-    quadrate
+    quadrate, \
+    reorder
 
 from .pcorrelations import \
     spearmanr, \
@@ -13,5 +14,10 @@ from .pcorrelations import \
 from .ptests import \
     ztest
 
+from .pscores import \
+    score_indexed, \
+    score_exhaustive 
+
 from .ppipelines import \
-    ztest_pipeline
+    ztest_pipeline, \
+    score_pipeline

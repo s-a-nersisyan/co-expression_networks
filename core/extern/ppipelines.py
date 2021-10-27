@@ -2,10 +2,15 @@ import numpy as np
 
 from .pipelines import \
     _ztest_pipeline_indexed, \
-    _ztest_pipeline_exhaustive
+    _score_pipeline_indexed, \
+    _ztest_pipeline_exhaustive, \
+    _score_pipeline_exhaustive
 
-from .ppcorrelations import \
+from .pcorrelations import \
     correlation_test \
+
+from .putils import \
+    reorder
 
 def get_num_ind(indexes, *args):
     index_hash = {
@@ -27,15 +32,15 @@ def ztest_pipeline(
     source_indexes=None,
     target_indexes=None,
     correlation="spearman",
+    correlation_alternative=None,
     alternative="two-sided",
     repeats_num=1000,
     process_num=1,
     numerical_index=False,
-    correlation_alternative=None
 ):
     data = df.to_numpy(copy=True).astype("float32")
 
-    if np.all(source_indexes) and np.all(target_indexes):
+    if np.all(source_indexes != None) and np.all(target_indexes != None):
         if not numerical_index:
             source_num_indexes, target_num_indexes = \
                 get_num_ind(
@@ -133,4 +138,108 @@ def ztest_pipeline(
                 exp_pvalues, stat, pvalue, bootstrap_pvalue
 
     return ref_corrs, exp_corrs, \
-            stat, pvalue, bootstrap_pvalue 
+            stat, pvalue, bootstrap_pvalue
+
+def score_pipeline( 
+    df,
+    reference_indexes,
+    experimental_indexes,
+    source_indexes=None,
+    target_indexes=None,
+    correlation="spearman",
+    score="mean",
+    alternative="two_sided",
+    repeats_num=1000,
+    process_num=1,
+    numerical_index=False,
+):
+    data = df.to_numpy(copy=True).astype("float32")
+
+    if np.all(source_indexes != None) and np.all(target_indexes != None):
+        if not numerical_index:
+            source_num_indexes, target_num_indexes = \
+                get_num_ind(
+                    df.index.to_list(),
+                    source_indexes,
+                    target_indexes
+                ) 
+            ref_num_indexes, exp_num_indexes = \
+                get_num_ind(
+                    df.columns.to_list(),
+                    reference_indexes,
+                    experimental_indexes
+                )
+        else:
+            source_num_indexes = source_indexes
+            target_num_indexes = target_indexes
+            
+            ref_num_indexes = reference_indexes
+            exp_num_indexes = experimental_indexes
+
+        source_num_indexes = np.array(
+            source_num_indexes
+        ).astype("int32")
+        target_num_indexes = np.array(
+            target_num_indexes
+        ).astype("int32")
+
+        ref_num_indexes = np.array(
+            ref_num_indexes
+        ).astype("int32")
+        exp_num_indexes = np.array(
+            exp_num_indexes
+        ).astype("int32")
+        
+        reorder(source_num_indexes, target_num_indexes)
+        
+        indexes, scores, pvalues = \
+            _score_pipeline_indexed(
+                data,
+                source_num_indexes,
+                target_num_indexes,
+                ref_num_indexes,
+                exp_num_indexes,
+                correlation,
+                score,
+                alternative,
+                repeats_num,
+                process_num
+            )
+    else:
+        if not numerical_index:
+            ref_num_indexes, exp_num_indexes = \
+                get_num_ind(
+                    df.columns.to_list(),
+                    reference_indexes,
+                    experimental_indexes
+                )
+        else:
+            ref_num_indexes = reference_indexes
+            exp_num_indexes = experimental_indexes
+        
+        ref_num_indexes = np.array(
+            ref_num_indexes
+        ).astype("int32")
+        exp_num_indexes = np.array(
+            exp_num_indexes
+        ).astype("int32")
+        
+        scores, pvalues = \
+            _score_pipeline_exhaustive(
+                data,
+                ref_num_indexes,
+                exp_num_indexes,
+                correlation,
+                score,
+                alternative,
+                repeats_num,
+                process_num
+            )
+
+        indexes = np.arange(data.shape[0], dtype="int32")
+    
+    return (
+        indexes,
+        scores,
+        pvalues
+    )

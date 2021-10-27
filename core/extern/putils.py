@@ -6,7 +6,9 @@ from .utils import \
     _paired_index, \
     _unary_vector, \
     _unary_matrix, \
-    _quadrate \
+    _quadrate, \
+    _reorder, \
+    _reorder_data
 
 
 def paired_index(index, base):
@@ -33,3 +35,8 @@ def quadrate(flatten_array, index, base):
     flatten_array = np.array(array, dtype="float32") 
     return _quadrate(flatten_array, index, base)
 
+def reorder(source_indexes, target_indexes, data=None):
+    if data:
+        _reorder_data(source_indexes, target_indexes, data)
+    else:
+        _reorder(source_indexes, target_indexes)
