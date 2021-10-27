@@ -1,7 +1,6 @@
 #include <cmath>
 #include <string>
 #include <utility>
-#include <queue>
 #include <vector>
 #include <algorithm>
 
@@ -29,7 +28,7 @@ float mean(
             index = index_ptr[i];
         }
 
-        mean += data_ptr[index_ptr[i]];
+        mean += data_ptr[index];
     }
 
     if (end_ind - start_ind > 0) {
@@ -41,19 +40,39 @@ float mean(
 
 int _mean(
     float *data_ptr,
-    float *start_ind_ptr,
-    float *end_ind_ptr,
+    int *starts_ind_ptr,
+    int *ends_ind_ptr,
     float *scores_ptr,
     int start_ind,
     int end_ind
 ) {
-    int size = end_ind - start_ind;
-    for (int i = 0; i < size; ++i) {
-        scores[start_ind + i] = mean(
+    for (int i = start_ind; i < end_ind; ++i) {
+        scores_ptr[start_ind + i] = mean(
             data_ptr,
             (int *) nullptr,
             starts_ind_ptr[i],
             ends_ind_ptr[i]
+        );  
+    }
+
+    return 0;
+}
+
+
+int __mean(
+    float *data_ptr,
+    int sources_size,
+    float *scores_ptr,
+    int start_ind,
+    int end_ind
+) {
+    for (int i = start_ind; i < end_ind; ++i) {
+        std::vector<int> targets = unary_vector(i, sources_size);
+        scores_ptr[i] = mean(
+            data_ptr,
+            targets.data(),
+            0,
+            sources_size
         );  
     }
 
@@ -65,14 +84,12 @@ float quantile(
     int *index_ptr,
     int start_ind,
     int end_ind,
-    float quantile
+    float q
 ) {
     if (end_ind - start_ind == 0) {
         return 0;
     }
 
-    float median = 0;
-    
     int index = 0;
     std::vector<float> values(end_ind - start_ind);
     for (int i = start_ind; i < end_ind; ++i) {
@@ -85,28 +102,49 @@ float quantile(
         values[i - start_ind] = data_ptr[index];
     }
 
-    std::sort(values.begin(), values.edn());
+    std::sort(values.begin(), values.end());
     
-    return values[(int) (end_ind - start_ind) * quantile];
+    return values[(int) (end_ind - start_ind) * q];
 }
 
 int _quantile(
     float *data_ptr,
-    float *start_ind_ptr,
-    float *end_ind_ptr,
+    int *starts_ind_ptr,
+    int *ends_ind_ptr,
     float *scores_ptr,
     int start_ind,
     int end_ind,
-    float quantile
+    float q
 ) {
-    int size = end_ind - start_ind;
-    for (int i = 0; i < size; ++i) {
-        scores[start_ind + i] = quantile(
+    for (int i = start_ind; i < end_ind; ++i) {
+        scores_ptr[i] = quantile(
             data_ptr,
             (int *) nullptr,
             starts_ind_ptr[i],
             ends_ind_ptr[i],
-            quantile
+            q
+        );  
+    }
+
+    return 0;
+}
+
+int __quantile(
+    float *data_ptr,
+    int sources_size,
+    float *scores_ptr,
+    int start_ind,
+    int end_ind,
+    float q
+) {
+    for (int i = start_ind; i < end_ind; ++i) {
+        std::vector<int> targets = unary_vector(i, sources_size);
+        scores_ptr[i] = quantile(
+            data_ptr,
+            targets.data(),
+            0,
+            sources_size,
+            q
         );  
     }
 
