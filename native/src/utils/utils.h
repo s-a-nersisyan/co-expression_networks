@@ -25,4 +25,11 @@ int rank_data(
     int process_num=1
 );
 
+int reorder(
+    int *source_ind_ptr,
+    int *target_ind_ptr,
+    int size,
+    float *data_ptr=nullptr
+);
+
 #endif

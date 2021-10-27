@@ -45,11 +45,17 @@ int ztest_unsized(
 
         float stat = (std::atanh(first_rs) -
                 std::atanh(second_rs));    
-
+        
+        // Note: we can use student distribution
+        // in the case of spearman correlation
+        
         // This block is a copy of 
         // core.correlation_utils.pearson_std
         float first_ss = 1 / std::sqrt(first_size - 3);
         float second_ss = 1 / std::sqrt(second_size - 3);
+        
+        // It is a maximal bound of the statistic
+        // variation: sqrt(1 + r^2 / 2)
         if (correlation == SPEARMAN) {
             first_ss *= std::sqrt(1.5);
             second_ss *= std::sqrt(1.5);

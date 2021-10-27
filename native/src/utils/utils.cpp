@@ -41,7 +41,8 @@ std::pair<int, int> paired_index(int index, int base) {
 
 std::vector<int> unary_vector(int index, int base) {
     /* Computes all indexes in the alphabetically
-     * ordered raw with "index" in the paired index */
+     * ordered raw with "index" in the first position
+     * of the paired index */
 
     std::vector<int> paired_array(base);
     for (int j = 0; j < base; ++j) {
@@ -96,7 +97,6 @@ int _rank_data(
 
     for (int i = start_ind; i < end_ind; ++i) {
         range(indexes.data(), sample_ind_size);
-
         std::sort(
             indexes.begin(),
             indexes.end(),
@@ -169,5 +169,70 @@ int rank_data(
         threads.pop();
     }
 
+    return 0;
+}
+
+int swap(
+    int *data,
+    int *indexes,
+    int size
+) {
+    std::vector<int> swaper(size);
+    for (int i = 0; i < size; ++i) {
+        swaper[i] = data[indexes[i]];
+    }
+
+    for (int i = 0; i < size; ++i) {
+        data[i] = swaper[i];
+    }
+
+    return 0;
+}
+
+int swap(
+    float *data,
+    int *indexes,
+    int size
+) {
+    std::vector<float> swaper(size);
+    for (int i = 0; i < size; ++i) {
+        swaper[i] = data[indexes[i]];
+    }
+
+    for (int i = 0; i < size; ++i) {
+        data[i] = swaper[i];
+    }
+
+    return 0;
+}
+
+int reorder(
+    int *source_ind_ptr,
+    int *target_ind_ptr,
+    int size,
+    float *data_ptr
+) { 
+    std::vector<int> indexes(size);
+    for (int i = 0; i < size; ++i) {
+        indexes[i] = i;
+    }
+    
+    std::sort(
+        indexes.begin(),
+        indexes.end(),
+        [
+            source_ind_ptr
+        ](int i1, int i2) {
+            return source_ind_ptr[i1] < source_ind_ptr[i2];
+        }
+    );
+
+    swap(source_ind_ptr, indexes.data(), size);
+    swap(target_ind_ptr, indexes.data(), size);
+    
+    if (data_ptr) {
+        swap(source_ind_ptr, indexes.data(), size);
+    }
+    
     return 0;
 }
