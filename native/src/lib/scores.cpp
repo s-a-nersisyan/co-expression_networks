@@ -107,7 +107,8 @@ std::pair<
                 ends.data(),
                 left_border,
                 right_border,
-                scores_ptr
+                scores_ptr,
+                false
             );
             
             threads.push(move(thr));
@@ -119,7 +120,8 @@ std::pair<
                 left_border,
                 right_border,
                 scores_ptr,
-                QMEDIAN
+                QMEDIAN,
+                false
             );
 
             threads.push(move(thr));
@@ -182,7 +184,8 @@ NumPyFloatArray score_exhaustive(
                 sources_size,
                 left_border,
                 right_border,
-                scores_ptr
+                scores_ptr,
+                false
             );
             
             threads.push(move(thr));
@@ -193,7 +196,8 @@ NumPyFloatArray score_exhaustive(
                 left_border,
                 right_border,
                 scores_ptr,
-                QMEDIAN
+                QMEDIAN,
+                false
             );
 
             threads.push(move(thr));
