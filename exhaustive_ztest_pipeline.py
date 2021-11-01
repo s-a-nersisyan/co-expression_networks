@@ -41,9 +41,7 @@ PROCESS_NUMBER = config["process_number"]
 
 FDR_THRESHOLD = config["fdr_treshold"]
 
-if os.path.isdir(OUTPUT_DIR_PATH) == False:
-    print("Output directory does not exist!")
-    sys.exit()
+core.utils.checking_directory_existence(OUTPUT_DIR_PATH)
 
 # Main part
 data_df = pd.read_csv(DATA_PATH, sep=",", index_col=0)
@@ -71,7 +69,7 @@ experimental_indexes = description_df.loc[
 ].to_list()
 
 # Test mode
-#data_df = data_df.iloc[:1000]
+data_df = data_df.iloc[:1000]
 
 print("Pipeline")
 start = time.time()

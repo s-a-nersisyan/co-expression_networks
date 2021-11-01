@@ -1,8 +1,10 @@
 import numpy as np
 import math
 import core.extern
-from pandas import DataFrame
 import tqdm
+import sys
+import os
+#from pandas import DataFrame
 
 BOOTSTRAP_REPEATS = 10**3
 
@@ -48,6 +50,13 @@ def bootstrap_sample(
             yield statistic(*samples)
         else:
             yield sample
+
+
+def checking_directory_existence(directory_path, message="Output directory does not exist!"):
+    if os.path.isdir(directory_path) == False:
+        print(message)
+        sys.exit()
+
 
 def saving_by_chunks(sort_ind, df_indexes, df_template, df_columns, 
                      OUTPUT_DIR_PATH, CORRELATION, filename_template, n=10**6):
