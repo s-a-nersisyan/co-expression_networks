@@ -59,7 +59,7 @@ def checking_directory_existence(directory_path, message="Output directory does 
 
 
 def saving_by_chunks(sort_ind, df_indexes, df_template, df_columns, 
-                     OUTPUT_DIR_PATH, CORRELATION, filename_template, n=10**6):
+                     path_to_file, n=10**6):
     df_inds = []
     rows = len(sort_ind)
     MODE, HEADER = 'w', True
@@ -87,8 +87,7 @@ def saving_by_chunks(sort_ind, df_indexes, df_template, df_columns,
             output_df.iloc[:,i+2] = df_columns[i][iter_indexes]
 
         output_df.to_csv(
-            OUTPUT_DIR_PATH.rstrip("/") + \
-            filename_template.format(CORRELATION),
+            path_to_file,
             sep=",",
             index=None,
             mode=MODE,
