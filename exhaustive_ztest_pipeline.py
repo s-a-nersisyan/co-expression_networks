@@ -69,7 +69,7 @@ experimental_indexes = description_df.loc[
 ].to_list()
 
 # Test mode
-data_df = data_df.iloc[:1000]
+#data_df = data_df.iloc[:1000]
 
 print("Pipeline")
 start = time.time()
@@ -154,5 +154,6 @@ df_template = pd.DataFrame(columns=["Source", "Target", "RefCorr", "RefPvalue", 
                                     "ExpPvalue", "Statistic", "Pvalue", "Bootpv", "FDR"])
 df_columns = [ref_corrs, ref_pvalues, exp_corrs, exp_pvalues, stat, pvalue, adjusted_pvalue]
 
-core.utils.saving_by_chunks(sort_ind, df_indexes, df_template, df_columns, 
-                            OUTPUT_DIR_PATH, CORRELATION, filename_template="/{}_ztest_pipeline.csv")
+path_to_file = OUTPUT_DIR_PATH.rstrip("/") + "/{}_ztest_pipeline.csv".format(CORRELATION)
+
+core.utils.saving_by_chunks(sort_ind, df_indexes, df_template, df_columns, path_to_file)

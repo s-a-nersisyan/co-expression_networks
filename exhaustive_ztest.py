@@ -157,5 +157,6 @@ df_template = pd.DataFrame(columns=["Source", "Target", "RefCorr", "RefPvalue",
                                     "ExpCorr", "ExpPvalue", "Statistic", "Pvalue", "FDR"])
 df_columns = [ref_corrs, ref_pvalues, exp_corrs, exp_pvalues, stat, pvalue, adjusted_pvalue]
 
-core.utils.saving_by_chunks(sort_ind, df_indexes, df_template, df_columns, 
-                            OUTPUT_DIR_PATH, CORRELATION, filename_template="/{}_ztest.csv")
+path_to_file = OUTPUT_DIR_PATH.rstrip("/") + "/{}_ztest.csv".format(CORRELATION)
+
+core.utils.saving_by_chunks(sort_ind, df_indexes, df_template, df_columns, path_to_file)
