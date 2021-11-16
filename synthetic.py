@@ -113,13 +113,13 @@ def get_pvalue(
 
 
 # Grid generation
-# sample_sizes = [i for i in range(5, 10)]
-# sample_sizes.extend([i for i in range(10, 50, 5)])
-# sample_sizes.extend([i for i in range(50, 100, 10)])
-# sample_sizes.extend([i for i in range(100, 500, 50)])
-# sample_sizes.extend([i for i in range(500, 1100, 100)])
-# sample_sizes.append(1280)
-# sample_sizes = np.array(sample_sizes)
+sample_sizes = [i for i in range(5, 10)]
+sample_sizes.extend([i for i in range(10, 50, 5)])
+sample_sizes.extend([i for i in range(50, 100, 10)])
+sample_sizes.extend([i for i in range(100, 500, 50)])
+sample_sizes.extend([i for i in range(500, 1100, 100)])
+sample_sizes.append(1280)
+sample_sizes = np.array(sample_sizes)
 gene_number = 1000
 
 target_correlations = [0.7, 0.5, 0.3]
@@ -129,13 +129,13 @@ print(target_correlations)
 # target_correlations = np.array(target_correlations)[::-1]
 # target_correlations = np.array(target_correlations)
 
-# diff_target_percents = np.array([0.5, 0.1, 0.01])
+diff_target_percents = np.array([0.5, 0.1, 0.01])
 # diff_target_percents = [0.5]
 # diff_target_percents = [0.1]
-diff_target_percents = [0.01]
+# diff_target_percents = [0.01]
 
 correlation = "spearman"
-score = "mean"
+score = "median"
 alternative = "two-sided"
 
 pvalue_df = pd.DataFrame(
@@ -174,13 +174,13 @@ for dtp in diff_target_percents:
             df["Diff percent"] = dtp
 
             pvalue_df = pd.concat([pvalue_df, df])
-            pvalue_df.to_csv("synthetic/add_{}_{}.csv".format(
+            pvalue_df.to_csv("synthetic/{}_{}.csv".format(
                 score, dtp
             ), sep=",", index=None)
 
             sns.lineplot(data=pvalue_df, x="Sample size", y="Pvalue", hue="Correlation")
             plt.xscale("log")
-            plt.savefig("synthetic/add_{}_{:.2f}.png".format(
+            plt.savefig("synthetic/{}_{:.2f}.png".format(
                 score, dtp
             ))
 
