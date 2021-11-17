@@ -162,8 +162,9 @@ df_template = pd.DataFrame(columns=[
     "ExpCorr", "ExpPvalue", "Statistic", "Pvalue", "FDR"
 ])
 df_columns = [
-    ref_corrs, ref_pvalues, exp_corrs,
-    exp_pvalues, stat, pvalue, adjusted_pvalue
+    ref_corrs, ref_pvalues,
+    exp_corrs, exp_pvalues,
+    stat, pvalue, adjusted_pvalue
 ]
 
 path_to_file = OUTPUT_DIR_PATH.rstrip("/") + "/{}_ztest.csv".format(CORRELATION)

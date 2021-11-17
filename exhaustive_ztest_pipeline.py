@@ -41,7 +41,7 @@ PROCESS_NUMBER = config["process_number"]
 
 FDR_THRESHOLD = config["fdr_treshold"]
 
-core.utils.checking_directory_existence(OUTPUT_DIR_PATH)
+core.utils.check_directory_existence(OUTPUT_DIR_PATH)
 
 # Main part
 data_df = pd.read_csv(DATA_PATH, sep=",", index_col=0)
@@ -69,7 +69,7 @@ experimental_indexes = description_df.loc[
 ].to_list()
 
 # Test mode
-#data_df = data_df.iloc[:1000]
+# data_df = data_df.iloc[:1000]
 
 print("Pipeline")
 start = time.time()
@@ -89,7 +89,7 @@ core.extern.ztest_pipeline(
     process_num=PROCESS_NUMBER,
     correlation_alternative="two-sided"
 )
-print(time.time() - start)
+print("Computational time: {:.3f}".format(time.time() - start))
 
 adjusted_pvalue = pvalue * len(pvalue) / \
     scipy.stats.rankdata(pvalue)
@@ -143,17 +143,33 @@ boot_pvalue = boot_pvalue[indexes]
 adjusted_pvalue = adjusted_pvalue[indexes]
 df_indexes = data_df.index.to_numpy()
 
+
+# Save mode
 print("Creating FDR/pvalue array")
-FDR_pvalue = np.core.records.fromarrays([adjusted_pvalue, pvalue], names='FDR, pvalue')
-print("Sorting...")
-sort_ind = np.argsort(FDR_pvalue, order=('FDR','pvalue'))
+FDR_pvalue = np.core.records.fromarrays(
+    [adjusted_pvalue, pvalue],
+    names='FDR, pvalue'
+)
+
+print("Sorting FDR/pvalue array")
+sorted_indexes = np.argsort(FDR_pvalue, order=('FDR','pvalue'))
 del FDR_pvalue
-print("Done!")
+print("FDR/pvalue array is sorted")
 
-df_template = pd.DataFrame(columns=["Source", "Target", "RefCorr", "RefPvalue", "ExpCorr", 
-                                    "ExpPvalue", "Statistic", "Pvalue", "Bootpv", "FDR"])
-df_columns = [ref_corrs, ref_pvalues, exp_corrs, exp_pvalues, stat, pvalue, adjusted_pvalue]
+df_template = pd.DataFrame(columns=[
+    "Source", "Target", "RefCorr", "RefPvalue", 
+    "ExpCorr", "ExpPvalue", "Statistic",
+    "Pvalue", "Bootpv", "FDR"
+])
+df_columns = [
+    ref_corrs, ref_pvalues,
+    exp_corrs, exp_pvalues, stat,
+    pvalue, boot_pvalue, adjusted_pvalue
+]
 
-path_to_file = OUTPUT_DIR_PATH.rstrip("/") + "/{}_ztest_pipeline.csv".format(CORRELATION)
-
-core.utils.saving_by_chunks(sort_ind, df_indexes, df_template, df_columns, path_to_file)
+path_to_file = OUTPUT_DIR_PATH.rstrip("/") + "/{}_ztest.csv".format(CORRELATION)
+core.utils.save_by_chunks(
+    sorted_indexes, 
+    df_indexes, df_template, df_columns,
+    path_to_file
+)
