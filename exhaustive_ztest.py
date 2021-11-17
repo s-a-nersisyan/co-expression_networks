@@ -6,9 +6,11 @@ import sys
 import time
 import tqdm
 import json
+import os
 
 # Import python package
 import core.extern
+import core.utils
 
 # Arg parser
 import argparse
@@ -37,6 +39,7 @@ PROCESS_NUMBER = config["process_number"]
 
 FDR_THRESHOLD = config["fdr_treshold"]
 
+core.utils.dump.check_directory_existence(OUTPUT_DIR_PATH)
 
 # Main part
 data_df = pd.read_csv(DATA_PATH, sep=",", index_col=0)
@@ -64,7 +67,7 @@ experimental_indexes = description_df.loc[
 ].to_list()
 
 # Test mode
-# data_df = data_df.iloc[:2]
+# data_df = data_df.iloc[:2200]
 
 print("Reference correlations")
 ref_corrs, ref_pvalues = correlation(
@@ -94,6 +97,7 @@ stat, pvalue = core.extern.ztest(
     alternative=ALTERNATIVE,
     process_num=PROCESS_NUMBER
 )
+
 
 adjusted_pvalue = pvalue * len(pvalue) / \
     scipy.stats.rankdata(pvalue)
@@ -140,34 +144,32 @@ pvalue = pvalue[indexes]
 adjusted_pvalue = adjusted_pvalue[indexes]
 df_indexes = data_df.index.to_numpy()
 
-source_indexes = []
-target_indexes = []
-for ind in tqdm.tqdm(indexes):
-    s, t = core.extern.paired_index(ind, len(df_indexes))
-    source_indexes.append(df_indexes[s])
-    target_indexes.append(df_indexes[t])
 
-source_indexes = np.array(source_indexes, dtype=np.str)
-target_indexes = np.array(target_indexes, dtype=np.str)
+# Save mode
+print("Creating FDR/pvalue array")
+FDR_pvalue = np.core.records.fromarrays(
+    [adjusted_pvalue, pvalue],
+    names='FDR, pvalue'
+)
 
-output_df = pd.DataFrame()
-output_df["Source"] = source_indexes
-output_df["Target"] = target_indexes
+print("Sorting FDR/pvalue array")
+sorted_indexes = np.argsort(FDR_pvalue, order=('FDR','pvalue'))
+del FDR_pvalue
+print("FDR/pvalue array is sorted")
 
-output_df["RefCorr"] = ref_corrs 
-output_df["RefPvalue"] = ref_pvalues
+df_template = pd.DataFrame(columns=[
+    "Source", "Target", "RefCorr", "RefPvalue", 
+    "ExpCorr", "ExpPvalue", "Statistic", "Pvalue", "FDR"
+])
+df_columns = [
+    ref_corrs, ref_pvalues,
+    exp_corrs, exp_pvalues,
+    stat, pvalue, adjusted_pvalue
+]
 
-output_df["ExpCorr"] = exp_corrs 
-output_df["ExpPvalue"] = exp_pvalues
-
-output_df["Statistic"] = stat
-output_df["Pvalue"] = pvalue
-output_df["FDR"] = adjusted_pvalue
-output_df = output_df.sort_values(["FDR", "Pvalue"])
-
-output_df.to_csv(
-    OUTPUT_DIR_PATH.rstrip("/") + \
-    "/{}_ztest.csv".format(CORRELATION),
-    sep=",",
-    index=None
+path_to_file = OUTPUT_DIR_PATH.rstrip("/") + "/{}_ztest.csv".format(CORRELATION)
+core.utils.save_by_chunks(
+    sorted_indexes, 
+    df_indexes, df_template, df_columns,
+    path_to_file
 )

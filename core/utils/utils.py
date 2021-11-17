@@ -1,5 +1,10 @@
 import numpy as np
 import math
+import tqdm
+import sys
+import os
+
+import core.extern
 
 BOOTSTRAP_REPEATS = 10**3
 
@@ -45,3 +50,4 @@ def bootstrap_sample(
             yield statistic(*samples)
         else:
             yield sample
+
