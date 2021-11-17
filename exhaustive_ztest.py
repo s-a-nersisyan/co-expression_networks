@@ -25,7 +25,7 @@ config = json.load(open(CONFIG_PATH, "r"))
 
 DATA_PATH = config["data_path"]
 DESCRIPTION_PATH = config["description_path"]
-INTERACTION_PATH = config["interaction_path"]
+# INTERACTION_PATH = config["interaction_path"]
 OUTPUT_DIR_PATH = config["output_dir_path"]
 
 REFERENCE_GROUP = config["reference_group"]
@@ -89,7 +89,7 @@ stat, pvalue = core.extern.ztest(
     ref_corrs.astype("float32"),
     len(reference_indexes),
     exp_corrs.astype("float32"),
-    len(experimental_indexes)
+    len(experimental_indexes),
     correlation=CORRELATION,
     alternative=ALTERNATIVE,
     process_num=PROCESS_NUMBER
