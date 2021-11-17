@@ -64,7 +64,7 @@ experimental_indexes = description_df.loc[
 ].to_list()
 
 # Test mode
-data_df = data_df.iloc[:2]
+# data_df = data_df.iloc[:2]
 
 print("Reference correlations")
 ref_corrs, ref_pvalues = correlation(
