@@ -167,7 +167,7 @@ df_columns = [
     pvalue, boot_pvalue, adjusted_pvalue
 ]
 
-path_to_file = OUTPUT_DIR_PATH.rstrip("/") + "/{}_ztest.csv".format(CORRELATION)
+path_to_file = OUTPUT_DIR_PATH.rstrip("/") + "/{}_ztest_pipeline.csv".format(CORRELATION)
 core.utils.save_by_chunks(
     sorted_indexes, 
     df_indexes, df_template, df_columns,

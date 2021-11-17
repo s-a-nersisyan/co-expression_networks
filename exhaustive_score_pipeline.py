@@ -11,6 +11,7 @@ import time
 
 # Import python package
 import core.extern
+import core.utils
 
 # Arg parser
 import argparse
@@ -88,7 +89,7 @@ core.extern.score_pipeline(
     repeats_num=REPEATS_NUMBER,
     process_num=PROCESS_NUMBER
 )
-print(time.time() - start)
+print("Computational time: {:.3f}".format(time.time() - start))
 
 adjusted_pvalue = pvalues * len(pvalues) / \
     scipy.stats.rankdata(pvalues)
