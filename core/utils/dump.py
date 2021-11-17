@@ -28,7 +28,7 @@ def save_by_chunks(
     
     # Splitting rows into chunks
     chunk_number = (len(indexes) + chunk_length - 1) // chunk_length
-    for i in tqdm.tqdm(range(chunk_number), desc="Save progres"):
+    for i in tqdm.tqdm(range(chunk_number), desc="Save progress"):
         start = i * chunk_length
         end = (i + 1) * chunk_length
         if i == chunk_number - 1:
