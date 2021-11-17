@@ -1,10 +1,10 @@
 import numpy as np
 import math
-import core.extern
 import tqdm
 import sys
 import os
-#from pandas import DataFrame
+
+import core.extern
 
 BOOTSTRAP_REPEATS = 10**3
 
@@ -50,48 +50,4 @@ def bootstrap_sample(
             yield statistic(*samples)
         else:
             yield sample
-
-
-def checking_directory_existence(directory_path, message="Output directory does not exist!"):
-    if os.path.isdir(directory_path) == False:
-        print(message)
-        sys.exit()
-
-
-def saving_by_chunks(sort_ind, df_indexes, df_template, df_columns, 
-                     path_to_file, n=10**6):
-    df_inds = []
-    rows = len(sort_ind)
-    MODE, HEADER = 'w', True
-    
-    # Splitting rows into chunks
-    for i in range(0, ((rows//n)+(rows%n))):
-        if rows < (i+1)*n:
-            df_inds.append([i*(n), rows])
-            break
-        df_inds.append([i*(n), (i+1)*n])
-        
-    for df_ind in tqdm.tqdm(df_inds, desc="Saving"):
-        iter_indexes = sort_ind[df_ind[0]:df_ind[1]]
-        
-        source_indexes = []
-        target_indexes = []
-        for ind in (iter_indexes):
-            s, t = core.extern.paired_index(ind, len(df_indexes))
-            source_indexes.append(df_indexes[s])
-            target_indexes.append(df_indexes[t])
-        output_df = df_template.copy()
-        output_df["Source"] = source_indexes
-        output_df["Target"] = target_indexes
-        for i in range(len(df_columns)):
-            output_df.iloc[:,i+2] = df_columns[i][iter_indexes]
-
-        output_df.to_csv(
-            path_to_file,
-            sep=",",
-            index=None,
-            mode=MODE,
-            header=HEADER
-        )
-        MODE, HEADER = 'a', False
 
